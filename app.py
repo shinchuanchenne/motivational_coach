@@ -12,7 +12,7 @@ api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 app = Flask(__name__)
 app.secret_key = 'supersecret'
-DATABASE = 'app.db'
+DATABASE = 'database.db'
 
 
 # Connect sqlite
@@ -28,6 +28,37 @@ def close_db(e=None):
     db = g.pop('db', None)
     if db:
         db.close()
+
+
+#login
+@app.route("/set_language", methods=["POST"])
+def set_language():
+    session['lang'] = request.form.get('lang','en')
+    return redirect(url_for('login'))
+
+#Signup
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    if request.method == "POST":
+        email = request.form["email"].strip().lower()
+        password = request.form["password"]
+        name = request.form["name"].strip()
+
+        db = get_db()
+
+        existing_user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        if existing_user:
+            return "<p>Email already registered. Please use another email.</p>"
+
+        db.execute(
+            "INSERT INTO users (email, password, name) VALUES (?, ?, ?)",
+            (email, password, name)
+        )
+        db.commit()
+
+        return redirect(url_for('login'))
+
+    return render_template("signup.html")
 
 
 @app.route("/", methods=["GET", "POST"])
