@@ -39,5 +39,9 @@
         <p>Already have an account? <a href="{{ url_for('login') }}">Back to login</a></p>
     {% endif %}
 
+    {% if error %}
+    <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
 </body>
 </html>

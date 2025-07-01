@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template, redirect, url_for, session, g
 from openai import OpenAI
+from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import os
 from dotenv import load_dotenv
@@ -40,7 +41,9 @@ def set_language():
 def signup():
     if request.method == "POST":
         email = request.form["email"].strip().lower()
-        password = request.form["password"]
+
+        #Generate password with hash
+        password = generate_password_hash(request.form["password"])
         name = request.form["name"].strip()
 
         db = get_db()
@@ -61,7 +64,6 @@ def signup():
         session['email'] = user['email']
 
         return redirect(url_for('goal_setting'))
-
     return render_template("signup.html")
 
 #Signup-goal setting
@@ -107,23 +109,32 @@ def goal_setting():
 
     return render_template("goal_setting.html", error=error)
 
+@app.route("/")
+def home():
+    return redirect(url_for('login'))
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
+    error = None
     if request.method == 'POST':
         email = request.form["email"].strip().lower()
-        db = get_db()
+        password = request.form["password"]
 
+        db = get_db()
         user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
-        if not user:
-            db.execute("INSERT INTO users (email) VALUES (?)", (email,))
-            db.commit()
-            user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
-        session['user_id'] = user['id']
-        session['email'] = user['email']
-        return redirect(url_for('index'))
-    return render_template("login.html")
+
+        if user and check_password_hash(user["password"], password):
+            #Login success
+            session['user_id'] = user['id']
+            session['email'] = user['email']
+            return redirect(url_for('index'))
+        else:
+            #Login fail
+            error = "帳號或密碼錯誤" if session.get('lang') == 'zh' else "Invalid email or password"
+
+    return render_template("login.html", error=error)
+
 
 
 @app.route("/index", methods=["GET", "POST"])
