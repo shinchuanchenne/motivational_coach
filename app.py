@@ -29,7 +29,6 @@ def close_db(e=None):
     if db:
         db.close()
 
-
 #login
 @app.route("/set_language", methods=["POST"])
 def set_language():
@@ -56,9 +55,58 @@ def signup():
         )
         db.commit()
 
-        return redirect(url_for('login'))
+        user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        # 自動登入
+        session['user_id'] = user['id']
+        session['email'] = user['email']
+
+        return redirect(url_for('goal_setting'))
 
     return render_template("signup.html")
+
+#Signup-goal setting
+@app.route("/goal_setting", methods=["GET", "POST"])
+def goal_setting():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    error = None
+    if request.method == "POST":
+        goal1 = request.form["goal1"].strip()
+        goal2 = request.form["goal2"].strip()
+        tone1 = request.form["tone1"]
+        tone2 = request.form["tone2"]      
+
+        if tone1 == tone2 and tone1 != "random":
+            error = "請為兩個目標設定不同的語氣風格"  
+        else:
+            import random
+            # 如果 tone 是 random，就從另一個 tone 裡隨機指定
+            if tone1 == "random":
+                tone1 = random.choice(["encouraging", "strict"])
+                # 確保 tone2 不同
+                if tone2 == tone1:
+                    tone2 = "strict" if tone1 == "encouraging" else "encouraging"
+            elif tone2 == "random":
+                tone2 = "strict" if tone1 == "encouraging" else "encouraging"            
+
+
+            # 儲存到資料庫
+            db = get_db()
+            db.execute(
+                "INSERT INTO goals (user_id, goal_text, tone) VALUES (?, ?, ?)",
+                (session['user_id'], goal1, tone1)
+            )
+            db.execute(
+                "INSERT INTO goals (user_id, goal_text, tone) VALUES (?, ?, ?)",
+                (session['user_id'], goal2, tone2)
+            )
+            db.commit()
+
+            return redirect(url_for('index'))
+
+    return render_template("goal_setting.html", error=error)
+
 
 
 @app.route("/", methods=["GET", "POST"])

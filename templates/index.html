@@ -6,6 +6,7 @@
     <title>Document</title>
 </head>
 <body>
+
     <!-- change language-->
      <form method="POST" action="/set_language">
         {% if session.get('lang')== 'zh' %}
@@ -29,7 +30,7 @@
         <button type="submit">登入</button>
     </form>
     <p>還沒有帳號？<a href="{{ url_for('signup') }}">註冊</a></p>
-    
+
     {% else %}
         <h2>Login to Motivational Coach</h2>
         <form method="POST" action="/login">

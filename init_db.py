@@ -19,7 +19,7 @@ cursor.execute('''
 CREATE TABLE IF NOT EXISTS goals (
                id INTEGER PRIMARY KEY AUTOINCREMENT,
                user_id INTEGER,
-               text TEXT,
+               goal_text TEXT,
                tone TEXT,
                FOREIGN KEY(user_id) REFERENCES users(id)
                 )
