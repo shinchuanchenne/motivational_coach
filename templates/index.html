@@ -3,6 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <title>GPT Demo</title>
+    <style>
+        .chat-history {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+        
+        .bubble {
+            padding: 10px;
+            margin: 8px;
+            border-radius: 10px;
+            max-width: 70%;
+        }
+        
+        .bubble.user {
+            background-color: #DCF8C6;
+            align-self: flex-end;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .bubble.gpt {
+            background-color: #E8E8E8;
+            align-self: flex-start;
+            margin-right: auto;
+            text-align: left;
+        }
+        </style>
+        
 </head>
 <body>
     <h1>Welcome to Motivational Coach</h1>
@@ -10,6 +39,23 @@
     <h2>Your first goal is {{ goals[0]['goal_text'] }}.</h2>
 
     <h3>Let's to GPT!</h3>
+    <h3>Conversation</h3>
+
+    <div class="chat-history">
+        {% for msg in history %}
+        {% if msg['role'] == 'user' %}
+        <div class="bubble user">
+            <p>{{msg['message']}}</p>
+        </div>
+
+        {% else %}
+        <div class="bubble gpt">
+            <p>{{msg['message']}}</p>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
     <form method="POST">
         <input type="text" name="user_input" placeholder="Say something..." required>
         <button type="submit">Send</button>

@@ -148,6 +148,12 @@ def index():
         (session['user_id'],)
     ).fetchall()
 
+    # Chat history
+    history = db.execute(
+        "SELECT role, message, timestamp FROM conversations WHERE user_id = ? ORDER BY timestamp ASC",
+        (session['user_id'],)
+    ).fetchall()
+
     #Received form
     response = ""
 
@@ -175,9 +181,15 @@ def index():
             )
         db.commit()
 
+        #Second time (including new one in history)
+        history = db.execute(
+            "SELECT role, message, timestamp FROM conversations WHERE user_id = ? ORDER BY timestamp ASC",
+            (session['user_id'],)
+        ).fetchall()        
+
         #print(completion)
         print(response)
-    return render_template("index.html", response=response, session=session, goals=goals)
+    return render_template("index.html", response=response, session=session, goals=goals, history=history)
 
 @app.route("/logout")
 def logout():
