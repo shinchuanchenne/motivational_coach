@@ -8,53 +8,27 @@
 <body>
 
     {% if session.get('lang') == 'zh' %}
-    <h2>請設定你的兩個目標與語氣風格</h2>
+    <h2>請設定你的兩個目標</h2>
     <form method="POST" action="/goal_setting">
         <label>目標1:</label><br>
         <input type="text" name="goal1" required><br>
 
-        <label>語氣：</label>
-        <select name="tone1">
-            <option value="random">隨機</option>
-            <option value="encouraging">鼓勵型</option>
-            <option value="strict">嚴格型</option>
         </select><br><br>
 
         <label>目標 2：</label><br>
         <input type="text" name="goal2" required><br>
 
-        <label>語氣：</label>
-        <select name="tone2">
-            <option value="random">隨機</option>
-            <option value="encouraging">鼓勵型</option>
-            <option value="strict">嚴格型</option>
-        </select><br><br>
-
         <button type="submit">儲存目標</button>
     </form>
 
     {% else %}
-        <h2>Please set your two goals and tone styles</h2>
+        <h2>Please set your two goals</h2>
         <form method="POST" action="/goal_setting">
             <label>Goal 1:</label><br>
             <input type="text" name="goal1" required><br>
 
-            <label>Tone:</label>
-            <select name="tone1">
-                <option value="random">Random</option>
-                <option value="encouraging">Encouraging</option>
-                <option value="strict">Strict</option>
-            </select><br><br>
-
             <label>Goal 2:</label><br>
             <input type="text" name="goal2" required><br>
-
-            <label>Tone:</label>
-            <select name="tone2">
-                <option value="random">Random</option>
-                <option value="encouraging">Encouraging</option>
-                <option value="strict">Strict</option>
-            </select><br><br>
 
             <button type="submit">Save Goals</button>
         </form>

@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for, session, g
+from flask import Flask, request, render_template, redirect, url_for, session, g, flash, get_flashed_messages
 from openai import OpenAI
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
@@ -30,10 +30,17 @@ def close_db(e=None):
     if db:
         db.close()
 
+#Redirect to home
+@app.route("/")
+def home():
+    return redirect(url_for('login'))
+
+
 #login
-@app.route("/set_language", methods=["POST"])
+@app.route("/set_language", methods=["GET"])
 def set_language():
-    session['lang'] = request.form.get('lang','en')
+    lang = request.args.get('lang', 'en') 
+    session['lang'] = lang
     return redirect(url_for('login'))
 
 #Signup
@@ -59,7 +66,7 @@ def signup():
         db.commit()
 
         user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
-        # 自動登入
+        # Auto login
         session['user_id'] = user['id']
         session['email'] = user['email']
 
@@ -76,42 +83,24 @@ def goal_setting():
     if request.method == "POST":
         goal1 = request.form["goal1"].strip()
         goal2 = request.form["goal2"].strip()
-        tone1 = request.form["tone1"]
-        tone2 = request.form["tone2"]      
 
-        if tone1 == tone2 and tone1 != "random":
-            error = "請為兩個目標設定不同的語氣風格"  
-        else:
-            import random
-            # 如果 tone 是 random，就從另一個 tone 裡隨機指定
-            if tone1 == "random":
-                tone1 = random.choice(["encouraging", "strict"])
-                # 確保 tone2 不同
-                if tone2 == tone1:
-                    tone2 = "strict" if tone1 == "encouraging" else "encouraging"
-            elif tone2 == "random":
-                tone2 = "strict" if tone1 == "encouraging" else "encouraging"            
-
-
-            # 儲存到資料庫
-            db = get_db()
-            db.execute(
-                "INSERT INTO goals (user_id, goal_text, tone) VALUES (?, ?, ?)",
-                (session['user_id'], goal1, tone1)
+        tone1 = "encouraging"
+        tone2 = "strict"  
+        # 儲存到資料庫
+        db = get_db()
+        db.execute(
+            "INSERT INTO goals (user_id, goal_text, tone) VALUES (?, ?, ?)",
+            (session['user_id'], goal1, tone1)
             )
-            db.execute(
-                "INSERT INTO goals (user_id, goal_text, tone) VALUES (?, ?, ?)",
-                (session['user_id'], goal2, tone2)
+        db.execute(
+            "INSERT INTO goals (user_id, goal_text, tone) VALUES (?, ?, ?)",
+            (session['user_id'], goal2, tone2)
             )
-            db.commit()
-
-            return redirect(url_for('index'))
+        db.commit()
+        
+        return redirect(url_for('index'))
 
     return render_template("goal_setting.html", error=error)
-
-@app.route("/")
-def home():
-    return redirect(url_for('login'))
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -131,8 +120,9 @@ def login():
             return redirect(url_for('index'))
         else:
             #Login fail
-            error = "帳號或密碼錯誤" if session.get('lang') == 'zh' else "Invalid email or password"
-
+            flash("帳號或密碼錯誤" if session.get('lang') == 'zh' else "Invalid email or password")
+            return redirect(url_for('login'))  # ✅ Redirect 而不是 render_template
+        
     return render_template("login.html", error=error)
 
 
@@ -155,11 +145,18 @@ def index():
             instructions="You are a funny assistant, always with a lot of humour."
         )
         response = completion.output_text
+
+        #　Save to conversations
         db = get_db()
         db.execute(
-            "INSERT INTO chats (user_input, gpt_response) VALUES (?, ?)",
-            (user_input, response)
-        )
+            "INSERT INTO conversations (user_id, goal_id, role, message) VALUES (?, ?, ?, ?)",
+            (session['user_id'], None, "user", user_input)
+            )
+        
+        db.execute(
+            "INSERT INTO conversations (user_id, goal_id, role, message) VALUES (?, ?, ?, ?)",
+            (session['user_id'], None, "gpt", response)
+            )
         db.commit()
 
         #print(completion)
