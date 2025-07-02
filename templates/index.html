@@ -5,8 +5,11 @@
     <title>GPT Demo</title>
 </head>
 <body>
-    <h1>Talk to GPT!</h1>
+    <h1>Welcome to Motivational Coach</h1>
     <p>Logged in as: <strong>{{session.email}}</strong></p>
+    <h2>Your first goal is {{ goals[0]['goal_text'] }}.</h2>
+
+    <h3>Let's to GPT!</h3>
     <form method="POST">
         <input type="text" name="user_input" placeholder="Say something..." required>
         <button type="submit">Send</button>

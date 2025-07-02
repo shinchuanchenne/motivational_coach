@@ -78,7 +78,10 @@ def signup():
 def goal_setting():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
+    #Prevent double login
+    if session.get('goals_set'):
+        return redirect(url_for('index'))
     error = None
     if request.method == "POST":
         goal1 = request.form["goal1"].strip()
@@ -97,7 +100,8 @@ def goal_setting():
             (session['user_id'], goal2, tone2)
             )
         db.commit()
-        
+        session['goals_set'] = True
+
         return redirect(url_for('index'))
 
     return render_template("goal_setting.html", error=error)
@@ -117,6 +121,7 @@ def login():
             #Login success
             session['user_id'] = user['id']
             session['email'] = user['email']
+            session['goals_set'] = False
             return redirect(url_for('index'))
         else:
             #Login fail
@@ -127,11 +132,22 @@ def login():
 
 
 
+
+
+
+
 @app.route("/index", methods=["GET", "POST"])
 def index():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
+    #Get two data
+    db = get_db()
+    goals = db.execute(
+        "SELECT goal_text, tone FROM goals WHERE user_id = ? ORDER BY id",
+        (session['user_id'],)
+    ).fetchall()
+
     #Received form
     response = ""
 
@@ -161,7 +177,7 @@ def index():
 
         #print(completion)
         print(response)
-    return render_template("index.html", response=response, session=session)
+    return render_template("index.html", response=response, session=session, goals=goals)
 
 @app.route("/logout")
 def logout():
