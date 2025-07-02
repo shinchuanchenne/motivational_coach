@@ -30,40 +30,96 @@
             margin-right: auto;
             text-align: left;
         }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        .column {
+            width: 48%;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        .chat-history {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        input[type="text"] {
+            width: 70%;
+            padding: 5px;
+        }
         </style>
+        
         
 </head>
 <body>
     <h1>Welcome to Motivational Coach</h1>
     <p>Logged in as: <strong>{{session.email}}</strong></p>
-    <h2>Your first goal is {{ goals[0]['goal_text'] }}.</h2>
+    <div class="container">
 
-    <h3>Let's to GPT!</h3>
-    <h3>Conversation</h3>
+        <div class="column">
+            <h2>Your first goal is {{ goals[0]['goal_text'] }}.</h2>
 
-    <div class="chat-history">
-        {% for msg in history %}
-        {% if msg['role'] == 'user' %}
-        <div class="bubble user">
-            <p>{{msg['message']}}</p>
+            <h3>Let's to GPT!</h3>
+            <h3>Conversation</h3>
+        
+            <div class="chat-history">
+                {% for msg in history1 %}
+                {% if msg['role'] == 'user' %}
+                <div class="bubble user">
+                    <p>{{msg['message']}}</p>
+                    <small>{{msg['timestamp']}}</small>
+                </div>
+                {% else %}
+                <div class="bubble gpt">
+                    <p>{{msg['message']}}</p>
+                    <small>{{msg['timestamp']}}</small>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        
+            <form method="POST">
+                <input type="hidden" name="goal_id" value="{{ goals[0]['id']}}">
+                <input type="text" name="user_input" placeholder="Say something..." required>
+                <button type="submit">Send</button>
+            </form>
         </div>
+        <div class="column">
+            <h2>Your second goal is {{ goals[1]['goal_text'] }}.</h2>
 
-        {% else %}
-        <div class="bubble gpt">
-            <p>{{msg['message']}}</p>
+            <h3>Let's to GPT!</h3>
+            <h3>Conversation</h3>
+        
+            <div class="chat-history">
+                {% for msg in history2 %}
+                {% if msg['role'] == 'user' %}
+                <div class="bubble user">
+                    <p>{{msg['message']}}</p>
+                    <small>{{msg['timestamp']}}</small>
+                </div>
+                {% else %}
+                <div class="bubble gpt">
+                    <p>{{msg['message']}}</p>
+                    <small>{{msg['timestamp']}}</small>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        
+            <form method="POST">
+                <input type="hidden" name="goal_id" value="{{ goals[1]['id']}}">
+                <input type="text" name="user_input" placeholder="Say something..." required>
+                <button type="submit">Send</button>
+            </form>
         </div>
-        {% endif %}
-        {% endfor %}
     </div>
-
-    <form method="POST">
-        <input type="text" name="user_input" placeholder="Say something..." required>
-        <button type="submit">Send</button>
-    </form>
-    {% if response %}
-        <h2>GPT-4 Says:</h2>
-        <p>{{ response }}</p>
-    {% endif %}
 
     <a href="/logout">Logout</a>
 </body>

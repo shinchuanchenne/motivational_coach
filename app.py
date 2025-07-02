@@ -131,11 +131,6 @@ def login():
     return render_template("login.html", error=error)
 
 
-
-
-
-
-
 @app.route("/index", methods=["GET", "POST"])
 def index():
     if 'user_id' not in session:
@@ -144,27 +139,47 @@ def index():
     #Get two data
     db = get_db()
     goals = db.execute(
-        "SELECT goal_text, tone FROM goals WHERE user_id = ? ORDER BY id",
+        "SELECT id, goal_text, tone FROM goals WHERE user_id = ? ORDER BY id",
         (session['user_id'],)
     ).fetchall()
 
+    goal1_id = goals[0]['id']
+    goal2_id = goals[1]['id']
+
     # Chat history
-    history = db.execute(
-        "SELECT role, message, timestamp FROM conversations WHERE user_id = ? ORDER BY timestamp ASC",
-        (session['user_id'],)
+    history1 = db.execute(
+        "SELECT role, message, timestamp FROM conversations WHERE user_id = ? AND goal_id = ? ORDER BY timestamp ASC",
+        (session['user_id'], goal1_id)
     ).fetchall()
+
+    history2 = db.execute(
+        "SELECT role, message, timestamp FROM conversations WHERE user_id = ? AND goal_id = ? ORDER BY timestamp ASC",
+        (session['user_id'], goal2_id)
+    ).fetchall()    
 
     #Received form
     response = ""
 
     if request.method == "POST":
         user_input = request.form["user_input"]
+        goal_id = int(request.form["goal_id"])
+
+        goal = next((g for g in goals if g["id"] == goal_id), None)
+        tone = goal["tone"] if goal else "encouraging"
+
+        # Build instruction based on tone
+        instruction = "You are a funny assistant, always with a lot of humour."  # 預設
+        if tone == "strict":
+            instruction = "You are a strict and demanding coach who pushes the user to do better."
+        elif tone == "encouraging":
+            instruction = "You are a warm and supportive coach who praises the user and encourages them."
+
 
         #Call chatgpt
         completion = client.responses.create(
           model="gpt-3.5-turbo",
             input=user_input,
-            instructions="You are a funny assistant, always with a lot of humour."
+            instructions=instruction
         )
         response = completion.output_text
 
@@ -172,24 +187,29 @@ def index():
         db = get_db()
         db.execute(
             "INSERT INTO conversations (user_id, goal_id, role, message) VALUES (?, ?, ?, ?)",
-            (session['user_id'], None, "user", user_input)
+            (session['user_id'], goal_id, "user", user_input)
             )
         
         db.execute(
             "INSERT INTO conversations (user_id, goal_id, role, message) VALUES (?, ?, ?, ?)",
-            (session['user_id'], None, "gpt", response)
+            (session['user_id'], goal_id, "gpt", response)
             )
         db.commit()
 
         #Second time (including new one in history)
-        history = db.execute(
-            "SELECT role, message, timestamp FROM conversations WHERE user_id = ? ORDER BY timestamp ASC",
-            (session['user_id'],)
+        history1 = db.execute(
+            "SELECT role, message, timestamp FROM conversations WHERE user_id = ? AND goal_id = ? ORDER BY timestamp ASC",
+            (session['user_id'], goal1_id)
         ).fetchall()        
+
+        history2 = db.execute(
+            "SELECT role, message, timestamp FROM conversations WHERE user_id = ?  AND goal_id = ? ORDER BY timestamp ASC",
+            (session['user_id'], goal2_id)
+        ).fetchall()               
 
         #print(completion)
         print(response)
-    return render_template("index.html", response=response, session=session, goals=goals, history=history)
+    return render_template("index.html", response=response, session=session, goals=goals, history1=history1, history2=history2)
 
 @app.route("/logout")
 def logout():
