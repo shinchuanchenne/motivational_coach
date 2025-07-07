@@ -47,6 +47,7 @@ def set_language():
 #Signup
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
+    error = None
     if request.method == "POST":
         email = request.form["email"].strip().lower()
 
@@ -55,21 +56,15 @@ def signup():
         name = request.form["name"].strip()
 
         db = get_db()
-
         existing_user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
         if existing_user:
             return "<p>Email already registered. Please use another email.</p>"
-
-        db.execute(
-            "INSERT INTO users (email, password, name) VALUES (?, ?, ?)",
-            (email, password, name)
-        )
-        db.commit()
-
-        user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
-        # Auto login
-        session['user_id'] = user['id']
-        session['email'] = user['email']
+        else:
+            session['pending_signup'] = {
+                'email': email,
+                'password': password,
+                'name': name
+            }
 
         return redirect(url_for('goal_setting'))
     return render_template("signup.html")
@@ -77,8 +72,9 @@ def signup():
 #Signup-goal setting
 @app.route("/goal_setting", methods=["GET", "POST"])
 def goal_setting():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
+
+    if 'pending_signup' not in session:
+        return redirect(url_for('signup'))
 
     #Prevent double login
     if session.get('goals_set'):
@@ -89,21 +85,42 @@ def goal_setting():
         goal2 = request.form["goal2"].strip()
 
         tone1 = "encouraging"
-        tone2 = "strict"  
-        # Save to db
-        db = get_db()
-        db.execute(
-            "INSERT INTO goals (user_id, goal_text, tone) VALUES (?, ?, ?)",
-            (session['user_id'], goal1, tone1)
-            )
-        db.execute(
-            "INSERT INTO goals (user_id, goal_text, tone) VALUES (?, ?, ?)",
-            (session['user_id'], goal2, tone2)
-            )
-        db.commit()
-        session['goals_set'] = True
+        tone2 = "strict"          
 
-        return redirect(url_for('index'))
+        if not goal1 or not goal2:
+            error = "Please enter 2 goals"
+        else:
+            try:
+                signup_data = session["pending_signup"]
+                db = get_db()
+
+                db.execute(
+                    "INSERT INTO users (email, password, name) VALUES (?, ?, ?)",
+                    (signup_data['email'], signup_data['password'], signup_data['name'])
+                )
+                db.commit()
+
+                user = db.execute("SELECT * FROM users WHERE email = ?", (signup_data['email'],)).fetchone()
+
+                db.execute(
+                    "INSERT INTO goals (user_id, goal_text, tone) VALUES (?, ?, ?)",
+                    (user['id'], goal1, "encouraging")
+                )
+                db.execute(
+                    "INSERT INTO goals (user_id, goal_text, tone) VALUES (?, ?, ?)",
+                    (user['id'], goal2, "strict")
+                )
+                db.commit()
+
+                session.pop('pending_signup')
+                session['user_id'] = user['id']
+                session['email'] = user['email']
+                session['goals_set'] = True
+
+                return redirect(url_for('index'))                
+            except Exception as e:
+                print("Goal setting error:", e)
+                error = "Failed, please try it later."
 
     return render_template("goal_setting.html", error=error)
 
