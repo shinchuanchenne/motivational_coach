@@ -3,9 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <title>GPT Demo</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}"
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    {% if session.get('lang') == 'zh' %}
+    <h2>歡迎來到動機教練</h2>
+    <p>登入帳號： <strong>{{session.email}}</strong></p>
+    <div class="container">
+
+        <div class="column">
+            <h2>你的第一個目標是： {{ goals[0]['goal_text'] }}.</h2>
+
+            <h3>讓我們來跟GPT教練聊天吧！</h3>
+        
+            <div class="chat-history">
+                {% for msg in history1 %}
+                {% if msg['role'] == 'user' %}
+                <div class="bubble user">
+                    <p>{{msg['message']}}</p>
+                    <small>{{msg['timestamp']}}</small>
+                </div>
+                {% else %}
+                <div class="bubble gpt">
+                    <p>{{msg['message']}}</p>
+                    <small>{{msg['timestamp']}}</small>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        
+            <form method="POST">
+                <input type="hidden" name="goal_id" value="{{ goals[0]['id']}}">
+                <input type="text" name="user_input" placeholder="Say something..." required>
+                <button type="submit">送出</button>
+            </form>
+
+
+            <h3>Goal 1：你今天達標了嗎？</h3>
+            <form method="POST">
+                <input type="hidden" name="goal_id" value="{{goals[0]['id']}}">
+                {% if checked1 %}
+                    <input type="hidden" name="checkin" value="0">
+                    <button type="submit">還原</button>
+                {% else %}
+                    <input type="hidden" name="checkin" value="1">
+                    <button type="submit">我今天完成目標了！</button>
+                {% endif %}
+            </form>
+
+            <h4>完成目標歷史紀錄</h4>
+            <ul>
+                {% for c in checkins1 %}
+                <li>{{ c['date'] }} - {{ 'v' if c['completed'] else 'x' }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="column">
+            <h2>你的第二個目標是： {{ goals[1]['goal_text'] }}.</h2>
+
+            <h3>讓我們來跟GPT教練聊天吧！</h3>
+        
+            <div class="chat-history">
+                {% for msg in history2 %}
+                {% if msg['role'] == 'user' %}
+                <div class="bubble user">
+                    <p>{{msg['message']}}</p>
+                    <small>{{msg['timestamp']}}</small>
+                </div>
+                {% else %}
+                <div class="bubble gpt">
+                    <p>{{msg['message']}}</p>
+                    <small>{{msg['timestamp']}}</small>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        
+            <form method="POST">
+                <input type="hidden" name="goal_id" value="{{ goals[1]['id']}}">
+                <input type="text" name="user_input" placeholder="Say something..." required>
+                <button type="submit">Send</button>
+            </form>
+
+
+            <h3>Goal 2：你今天達標了嗎？</h3>
+            <form method="POST">
+                <input type="hidden" name="goal_id" value="{{goals[1]['id']}}">
+                {% if checked2 %}
+                    <input type="hidden" name="checkin" value="0">
+                    <button type="submit">還原</button>
+                {% else %}
+                    <input type="hidden" name="checkin" value="1">
+                    <button type="submit">我今天完成目標了！</button>
+                {% endif %}
+            </form>
+
+            <h4>完成目標歷史紀錄</h4>
+            <ul>
+                {% for c in checkins2 %}
+                <li>{{ c['date'] }} - {{ 'v' if c['completed'] else 'x' }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <a href="/logout">登出</a>
+
+    {% elif session.get('lang') == 'en' %}
     <h1>Welcome to Motivational Coach</h1>
     <p>Logged in as: <strong>{{session.email}}</strong></p>
     <div class="container">
@@ -35,7 +139,7 @@
             <form method="POST">
                 <input type="hidden" name="goal_id" value="{{ goals[0]['id']}}">
                 <input type="text" name="user_input" placeholder="Say something..." required>
-                <button type="submit">Send</button>
+                <button type="submit">送出</button>
             </form>
 
 
@@ -109,6 +213,7 @@
     </div>
 
     <a href="/logout">Logout</a>
+    {% endif %}
 </body>
 <script>
     function toggleCheckin(button) {
