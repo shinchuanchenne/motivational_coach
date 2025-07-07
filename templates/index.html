@@ -227,6 +227,12 @@
             button.dataset.checked = "true";
         }
     }
+
+    window.onload = function(){
+        document.querySelectorAll(".chat-history").forEach(function(chat){
+            chat.scrollTop = chat.scrollHeight;
+        })
+    }
     </script>
     
 </html>
