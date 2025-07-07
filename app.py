@@ -188,18 +188,37 @@ def index():
         goal = next((g for g in goals if g["id"] == goal_id), None)
         tone = goal["tone"] if goal else "encouraging"
 
-        instruction = "You are a funny assistant, always with a lot of humour."
-        if tone == "strict":
-            instruction = "You are a strict and demanding coach who pushes the user to do better."
-        elif tone == "encouraging":
-            instruction = "You are a warm and supportive coach who praises the user and encourages them."
+        db = get_db()
 
-        completion = client.responses.create(
+        #Get user data
+        user = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
+
+        # Get history
+        history = db.execute("SELECT role, message FROM conversations WHERE user_id = ? AND goal_id = ? ORDER BY timestamp ASC",
+                             (session['user_id'], goal_id)).fetchall()
+
+        instruction = "You are a assistant."
+        if tone == "strict":
+            instruction = f"You are a strict and demanding coach helping {user['name']} achieve the goal: '{goal['goal_text']}. Be firm and push them to do better."
+        elif tone == "encouraging":
+            instruction = f"You are a warm and supportive coach who praises the user: {user['name']} stay motivated for the goal: '{goal['goal_text']}. Encourages them with kindness and support."
+        
+        # Build message (system + history + user_input)
+        messages = [{"role": "system", "content": instruction}]
+        for msg in history:
+            messages.append({"role": msg["role"], "content": msg["message"]})
+        messages.append({"role": "user", "content": user_input})
+
+        print(messages)
+
+        # Send this to GPT
+        from openai import OpenAI
+        client = OpenAI(api_key=api_key)
+        completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            input=user_input,
-            instructions=instruction
+            messages=messages
         )
-        response = completion.output_text
+        response = completion.choices[0].message.content
 
         db.execute(
             "INSERT INTO conversations (user_id, goal_id, role, message) VALUES (?, ?, ?, ?)",
@@ -207,7 +226,7 @@ def index():
         )
         db.execute(
             "INSERT INTO conversations (user_id, goal_id, role, message) VALUES (?, ?, ?, ?)",
-            (session['user_id'], goal_id, "gpt", response)
+            (session['user_id'], goal_id, "assistant", response)
         )
         db.commit()
 

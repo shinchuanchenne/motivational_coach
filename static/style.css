@@ -6,3 +6,56 @@ textarea {
     width: 100%;
     height: 100px;
 }
+
+.chat-history {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+.bubble {
+    padding: 10px;
+    margin: 8px;
+    border-radius: 10px;
+    max-width: 70%;
+}
+
+.bubble.user {
+    background-color: #DCF8C6;
+    align-self: flex-end;
+    margin-left: auto;
+    text-align: right;
+}
+
+.bubble.gpt {
+    background-color: #E8E8E8;
+    align-self: flex-start;
+    margin-right: auto;
+    text-align: left;
+}
+
+.container {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+}
+
+.column {
+    width: 48%;
+    border: 1px solid #ccc;
+    padding: 10px;
+}
+
+.chat-history {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+body {
+    font-family: Arial, sans-serif;
+}
+
+input[type="text"] {
+    width: 70%;
+    padding: 5px;
+}
