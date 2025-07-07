@@ -3,6 +3,7 @@ from openai import OpenAI
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import os
+import datetime
 from dotenv import load_dotenv
 
 #Loading API
@@ -89,7 +90,7 @@ def goal_setting():
 
         tone1 = "encouraging"
         tone2 = "strict"  
-        # 儲存到資料庫
+        # Save to db
         db = get_db()
         db.execute(
             "INSERT INTO goals (user_id, goal_text, tone) VALUES (?, ?, ?)",
@@ -135,8 +136,8 @@ def login():
 def index():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
-    #Get two data
+
+    import datetime
     db = get_db()
     goals = db.execute(
         "SELECT id, goal_text, tone FROM goals WHERE user_id = ? ORDER BY id",
@@ -146,7 +147,71 @@ def index():
     goal1_id = goals[0]['id']
     goal2_id = goals[1]['id']
 
-    # Chat history
+    response = ""
+
+    if request.method == "POST":
+        goal_id = int(request.form["goal_id"])
+        today = datetime.date.today()
+        
+        # Check whether is "check-in" request. 
+        if 'checkin' in request.form:
+            if request.form.get("checkin") == '1':
+                today = datetime.date.today()
+                already = db.execute(
+                    "SELECT * FROM checkins WHERE user_id = ? AND goal_id = ? AND date = ?",
+                    (session['user_id'], goal_id, today)
+                ).fetchone()
+
+                if not already:
+                    db.execute(
+                        "INSERT INTO checkins (user_id, goal_id, date, completed) VALUES (?, ?, ?, ?)",
+                        (session['user_id'], goal_id, today, True)
+                    )
+                    db.commit()
+                    flash("Check-in recorded!")
+                else:
+                    flash("You've already checked in today!")
+
+                return redirect(url_for('index'))
+            elif request.form["checkin"] == "0":
+                # Undo check-in
+                db.execute(
+                    "DELETE FROM checkins WHERE user_id = ? AND goal_id = ? AND date = ?",
+                    (session['user_id'], goal_id, today)
+                )
+                db.commit()
+                flash("Check-in undone!")
+            return redirect(url_for('index'))
+
+        # Otherwise it is "GPT Conversation"
+        user_input = request.form["user_input"]
+        goal = next((g for g in goals if g["id"] == goal_id), None)
+        tone = goal["tone"] if goal else "encouraging"
+
+        instruction = "You are a funny assistant, always with a lot of humour."
+        if tone == "strict":
+            instruction = "You are a strict and demanding coach who pushes the user to do better."
+        elif tone == "encouraging":
+            instruction = "You are a warm and supportive coach who praises the user and encourages them."
+
+        completion = client.responses.create(
+            model="gpt-3.5-turbo",
+            input=user_input,
+            instructions=instruction
+        )
+        response = completion.output_text
+
+        db.execute(
+            "INSERT INTO conversations (user_id, goal_id, role, message) VALUES (?, ?, ?, ?)",
+            (session['user_id'], goal_id, "user", user_input)
+        )
+        db.execute(
+            "INSERT INTO conversations (user_id, goal_id, role, message) VALUES (?, ?, ?, ?)",
+            (session['user_id'], goal_id, "gpt", response)
+        )
+        db.commit()
+
+    # No matter both check-in or conversation need to update the newest record
     history1 = db.execute(
         "SELECT role, message, timestamp FROM conversations WHERE user_id = ? AND goal_id = ? ORDER BY timestamp ASC",
         (session['user_id'], goal1_id)
@@ -155,61 +220,41 @@ def index():
     history2 = db.execute(
         "SELECT role, message, timestamp FROM conversations WHERE user_id = ? AND goal_id = ? ORDER BY timestamp ASC",
         (session['user_id'], goal2_id)
-    ).fetchall()    
+    ).fetchall()
 
-    #Received form
-    response = ""
+    checkins1 = db.execute(
+        "SELECT date, completed FROM checkins WHERE user_id = ? AND goal_id = ? ORDER BY date DESC",
+        (session['user_id'], goal1_id)
+    ).fetchall()
 
-    if request.method == "POST":
-        user_input = request.form["user_input"]
-        goal_id = int(request.form["goal_id"])
+    checkins2 = db.execute(
+        "SELECT date, completed FROM checkins WHERE user_id = ? AND goal_id = ? ORDER BY date DESC",
+        (session['user_id'], goal2_id)
+    ).fetchall()
 
-        goal = next((g for g in goals if g["id"] == goal_id), None)
-        tone = goal["tone"] if goal else "encouraging"
+    today = datetime.date.today()
+    checked1 = db.execute(
+        "SELECT * FROM checkins WHERE user_id = ? AND goal_id = ? AND date = ?",
+        (session['user_id'], goal1_id, today)
+    ).fetchone()
 
-        # Build instruction based on tone
-        instruction = "You are a funny assistant, always with a lot of humour."  # 預設
-        if tone == "strict":
-            instruction = "You are a strict and demanding coach who pushes the user to do better."
-        elif tone == "encouraging":
-            instruction = "You are a warm and supportive coach who praises the user and encourages them."
+    checked2 = db.execute(
+        "SELECT * FROM checkins WHERE user_id = ? AND goal_id = ? AND date = ?",
+        (session['user_id'], goal2_id, today)
+    ).fetchone()
 
-
-        #Call chatgpt
-        completion = client.responses.create(
-          model="gpt-3.5-turbo",
-            input=user_input,
-            instructions=instruction
-        )
-        response = completion.output_text
-
-        #　Save to conversations
-        db = get_db()
-        db.execute(
-            "INSERT INTO conversations (user_id, goal_id, role, message) VALUES (?, ?, ?, ?)",
-            (session['user_id'], goal_id, "user", user_input)
-            )
-        
-        db.execute(
-            "INSERT INTO conversations (user_id, goal_id, role, message) VALUES (?, ?, ?, ?)",
-            (session['user_id'], goal_id, "gpt", response)
-            )
-        db.commit()
-
-        #Second time (including new one in history)
-        history1 = db.execute(
-            "SELECT role, message, timestamp FROM conversations WHERE user_id = ? AND goal_id = ? ORDER BY timestamp ASC",
-            (session['user_id'], goal1_id)
-        ).fetchall()        
-
-        history2 = db.execute(
-            "SELECT role, message, timestamp FROM conversations WHERE user_id = ?  AND goal_id = ? ORDER BY timestamp ASC",
-            (session['user_id'], goal2_id)
-        ).fetchall()               
-
-        #print(completion)
-        print(response)
-    return render_template("index.html", response=response, session=session, goals=goals, history1=history1, history2=history2)
+    return render_template(
+        "index.html",
+        response=response,
+        session=session,
+        goals=goals,
+        history1=history1,
+        history2=history2,
+        checkins1=checkins1,
+        checkins2=checkins2,
+        checked1=checked1,
+        checked2=checked2
+    )
 
 @app.route("/logout")
 def logout():

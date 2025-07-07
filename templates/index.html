@@ -90,6 +90,26 @@
                 <input type="text" name="user_input" placeholder="Say something..." required>
                 <button type="submit">Send</button>
             </form>
+
+
+            <h3>Check-in for Goal 1</h3>
+            <form method="POST">
+                <input type="hidden" name="goal_id" value="{{goals[0]['id']}}">
+                {% if checked1 %}
+                    <input type="hidden" name="checkin" value="0">
+                    <button type="submit">↩️ Undo check-in</button>
+                {% else %}
+                    <input type="hidden" name="checkin" value="1">
+                    <button type="submit">✅ I completed this goal today!</button>
+                {% endif %}
+            </form>
+
+            <h4> Check-in history</h4>
+            <ul>
+                {% for c in checkins1 %}
+                <li>{{ c['date'] }} - {{ 'v' if c['completed'] else 'x' }}</li>
+                {% endfor %}
+            </ul>
         </div>
         <div class="column">
             <h2>Your second goal is {{ goals[1]['goal_text'] }}.</h2>
@@ -118,9 +138,43 @@
                 <input type="text" name="user_input" placeholder="Say something..." required>
                 <button type="submit">Send</button>
             </form>
+
+
+            <h3>Check-in for Goal 2</h3>
+            <form method="POST">
+                <input type="hidden" name="goal_id" value="{{goals[1]['id']}}">
+                {% if checked2 %}
+                    <input type="hidden" name="checkin" value="0">
+                    <button type="submit">↩️ Undo check-in</button>
+                {% else %}
+                    <input type="hidden" name="checkin" value="1">
+                    <button type="submit">✅ I completed this goal today!</button>
+                {% endif %}
+            </form>
+
+            <h4> Check-in history</h4>
+            <ul>
+                {% for c in checkins2 %}
+                <li>{{ c['date'] }} - {{ 'v' if c['completed'] else 'x' }}</li>
+                {% endfor %}
+            </ul>
         </div>
     </div>
 
     <a href="/logout">Logout</a>
 </body>
+<script>
+    function toggleCheckin(button) {
+        if (button.dataset.checked === "true") {
+            // Undo
+            button.innerText = " I completed this goal today!";
+            button.dataset.checked = "false";
+        } else {
+            // Mark as checked
+            button.innerText = "↩️ Undo check-in";
+            button.dataset.checked = "true";
+        }
+    }
+    </script>
+    
 </html>
