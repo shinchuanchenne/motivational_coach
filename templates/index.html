@@ -109,7 +109,7 @@
 
     <a href="/logout">登出</a>
 
-    {% elif session.get('lang') == 'en' %}
+    {% else %}
     <h1>Welcome to Motivational Coach</h1>
     <p>Logged in as: <strong>{{session.email}}</strong></p>
     <div class="container">
