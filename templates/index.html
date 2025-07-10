@@ -148,10 +148,10 @@
                 <input type="hidden" name="goal_id" value="{{goals[0]['id']}}">
                 {% if checked1 %}
                     <input type="hidden" name="checkin" value="0">
-                    <button type="submit">↩️ Undo check-in</button>
+                    <button type="submit">Undo check-in</button>
                 {% else %}
                     <input type="hidden" name="checkin" value="1">
-                    <button type="submit">✅ I completed this goal today!</button>
+                    <button type="submit">I completed this goal today!</button>
                 {% endif %}
             </form>
 
@@ -196,10 +196,10 @@
                 <input type="hidden" name="goal_id" value="{{goals[1]['id']}}">
                 {% if checked2 %}
                     <input type="hidden" name="checkin" value="0">
-                    <button type="submit">↩️ Undo check-in</button>
+                    <button type="submit">Undo check-in</button>
                 {% else %}
                     <input type="hidden" name="checkin" value="1">
-                    <button type="submit">✅ I completed this goal today!</button>
+                    <button type="submit">I completed this goal today!</button>
                 {% endif %}
             </form>
 
@@ -223,7 +223,7 @@
             button.dataset.checked = "false";
         } else {
             // Mark as checked
-            button.innerText = "↩️ Undo check-in";
+            button.innerText = "Undo check-in";
             button.dataset.checked = "true";
         }
     }
