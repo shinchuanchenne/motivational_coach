@@ -199,9 +199,46 @@ def index():
                 db.commit()
                 flash("Check-in undone!")
             return redirect(url_for('index'))
+        
+
+        # Check if this is a "daily plan generation" request
+        if 'user_note' in request.form:
+            user_note = request.form.get("user_note", "").strip()
+
+            # Find the goal
+            goal = next((g for g in goals if g['id'] == goal_id), None)
+            tone = goal["tone"] if goal else "encouraging"
+
+            instruction = f"Based on the user's goal: {goal['goal_text']}, generate a short, doable plan for today."
+            if user_note:
+                instruction += f" The user says: '{user_note}."
+            if session.get('lang') == 'zh':
+
+                instruction += " Please reply in Traditional Chinese as used in Taiwan."
+            if tone == "strict":
+                instruction = f"You are a strict and demanding coach. {instruction} Be firm and push the user to do better."
+            elif tone == "encouraging":
+                instruction = f"You are a warm and supportive coach. {instruction} Encourage the user kindly and positively."
+            
+            messages = [{"role": "system", "content": instruction}]
+            messages.append({"role": "user", "content": "What is the plan"})
+
+            completion = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=messages
+            )
+            plan_text = completion.choices[0].message.content.strip()
+
+            # Storage variable
+            if goal_id == goal1_id:
+                plan1 = plan_text
+            elif goal_id == goal2_id:
+                plan2 = plan_text
 
         # Otherwise it is "GPT Conversation"
-        user_input = request.form["user_input"]
+        if 'user_input' in request.form:
+            user_input = request.form.get("user_input","").strip()
+            
         goal = next((g for g in goals if g["id"] == goal_id), None)
         tone = goal["tone"] if goal else "encouraging"
 
@@ -219,7 +256,12 @@ def index():
             instruction = f"You are a strict and demanding coach helping {user['name']} achieve the goal: '{goal['goal_text']}. Be firm and push them to do better."
         elif tone == "encouraging":
             instruction = f"You are a warm and supportive coach who praises the user: {user['name']} stay motivated for the goal: '{goal['goal_text']}. Encourages them with kindness and support."
-        
+                
+        print(f"Session: {session.get('lang')}")
+        # If language is Chinese, use traditional Chinese:
+        if session.get('lang') == 'zh':
+            instruction += " Please reply in Traditional Chinese as used in Taiwan. "
+
         # Build message (system + history + user_input)
         messages = [{"role": "system", "content": instruction}]
         for msg in history:
@@ -230,7 +272,7 @@ def index():
 
         # Send this to GPT
         from openai import OpenAI
-        client = OpenAI(api_key=api_key)
+        #client = OpenAI(api_key=api_key)
         completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=messages
@@ -278,6 +320,7 @@ def index():
         "SELECT * FROM checkins WHERE user_id = ? AND goal_id = ? AND date = ?",
         (session['user_id'], goal2_id, today)
     ).fetchone()
+    
 
     return render_template(
         "index.html",
@@ -289,7 +332,9 @@ def index():
         checkins1=checkins1,
         checkins2=checkins2,
         checked1=checked1,
-        checked2=checked2
+        checked2=checked2,
+        plan1=locals().get("plan1", ""),
+        plan2=locals().get("plan2","")
     )
 
 @app.route("/logout")

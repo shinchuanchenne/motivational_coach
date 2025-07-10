@@ -14,6 +14,21 @@
         <div class="column">
             <h2>你的第一個目標是： {{ goals[0]['goal_text'] }}.</h2>
 
+            <h3>讓我們來跟GPT討論計劃吧！</h3>
+            <div class="gpt-plan">
+                <form method="POST">
+                    <input type="hidden" name="goal_id" value="{{goals[0]['id']}}">
+                    <input type="text" name="user_note" placeholder="提供條件（可空白）">
+                    <button type="submit">生成今日任務</button>
+                </form>
+                <div class="plan-box">
+                    {% if plan1 %}
+                        <p>{{ plan1 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+
             <h3>讓我們來跟GPT教練聊天吧！</h3>
         
             <div class="chat-history">
@@ -61,6 +76,20 @@
         <div class="column">
             <h2>你的第二個目標是： {{ goals[1]['goal_text'] }}.</h2>
 
+            <h3>讓我們來跟GPT討論計劃吧！</h3>
+            <div class="gpt-plan">
+                <form method="POST">
+                    <input type="hidden" name="goal_id" value="{{goals[1]['id']}}">
+                    <input type="text" name="user_note" placeholder="提供條件（可空白）">
+                    <button type="submit">生成今日任務</button>
+                </form>
+                <div class="plan-box">
+                    {% if plan2 %}
+                        <p>{{ plan2 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
             <h3>讓我們來跟GPT教練聊天吧！</h3>
         
             <div class="chat-history">
@@ -82,7 +111,7 @@
             <form method="POST">
                 <input type="hidden" name="goal_id" value="{{ goals[1]['id']}}">
                 <input type="text" name="user_input" placeholder="Say something..." required>
-                <button type="submit">Send</button>
+                <button type="submit">送出</button>
             </form>
 
 

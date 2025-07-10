@@ -220,6 +220,9 @@ def index():
         elif tone == "encouraging":
             instruction = f"You are a warm and supportive coach who praises the user: {user['name']} stay motivated for the goal: '{goal['goal_text']}. Encourages them with kindness and support."
         
+        # If language is Chinese, use traditional Chinese:
+        if session.get('lang') == 'zh':
+            instruction += " Please reply in Traditional Chinese as used in Taiwan. "
         # Build message (system + history + user_input)
         messages = [{"role": "system", "content": instruction}]
         for msg in history:
