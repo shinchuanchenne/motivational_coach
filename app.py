@@ -198,6 +198,9 @@ def index():
         (session['user_id'], goal2_id, today)
     ).fetchone()    
 
+    plan1 = session.get("plan1", "")
+    plan2 = session.get("plan2", "")
+
     if request.method == "POST":
         goal_id = int(request.form["goal_id"])
         today = datetime.date.today()
@@ -264,8 +267,10 @@ def index():
             # Storage variable
             plan1 = plan2 = ""
             if goal_id == goal1_id:
+                plan1 = plan_text
                 session['plan1'] = plan_text
             elif goal_id == goal2_id:
+                plan2 = plan_text
                 session['plan2'] = plan_text
 
             return render_template(
@@ -279,7 +284,7 @@ def index():
                 checkins2=checkins2,
                 checked1=checked1,
                 checked2=checked2,
-                plan1=session.get("plan1", ""),
+                plan1=session.get("plan1",""),
                 plan2=session.get("plan2","")
             )
             
@@ -349,8 +354,9 @@ def index():
         checkins2=checkins2,
         checked1=checked1,
         checked2=checked2,
-        plan1=locals().get("plan1", ""),
-        plan2=locals().get("plan2","")
+        plan1=session.get("plan1", ""),
+        plan2=session.get("plan2","")
+        
     )
 
 @app.route("/logout")
