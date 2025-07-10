@@ -166,6 +166,38 @@ def index():
 
     response = ""
 
+    # No matter both check-in or conversation need to update the newest record
+    history1 = db.execute(
+        "SELECT role, message, timestamp FROM conversations WHERE user_id = ? AND goal_id = ? ORDER BY timestamp ASC",
+        (session['user_id'], goal1_id)
+    ).fetchall()
+
+    history2 = db.execute(
+        "SELECT role, message, timestamp FROM conversations WHERE user_id = ? AND goal_id = ? ORDER BY timestamp ASC",
+        (session['user_id'], goal2_id)
+    ).fetchall()
+
+    checkins1 = db.execute(
+        "SELECT date, completed FROM checkins WHERE user_id = ? AND goal_id = ? ORDER BY date DESC",
+        (session['user_id'], goal1_id)
+    ).fetchall()
+
+    checkins2 = db.execute(
+        "SELECT date, completed FROM checkins WHERE user_id = ? AND goal_id = ? ORDER BY date DESC",
+        (session['user_id'], goal2_id)
+    ).fetchall()
+
+    today = datetime.date.today()
+    checked1 = db.execute(
+        "SELECT * FROM checkins WHERE user_id = ? AND goal_id = ? AND date = ?",
+        (session['user_id'], goal1_id, today)
+    ).fetchone()
+
+    checked2 = db.execute(
+        "SELECT * FROM checkins WHERE user_id = ? AND goal_id = ? AND date = ?",
+        (session['user_id'], goal2_id, today)
+    ).fetchone()    
+
     if request.method == "POST":
         goal_id = int(request.form["goal_id"])
         today = datetime.date.today()
@@ -202,7 +234,7 @@ def index():
         
 
         # Check if this is a "daily plan generation" request
-        if 'user_note' in request.form:
+        elif 'user_note' in request.form:
             user_note = request.form.get("user_note", "").strip()
 
             # Find the goal
@@ -230,11 +262,27 @@ def index():
             plan_text = completion.choices[0].message.content.strip()
 
             # Storage variable
+            plan1 = plan2 = ""
             if goal_id == goal1_id:
-                plan1 = plan_text
+                session['plan1'] = plan_text
             elif goal_id == goal2_id:
-                plan2 = plan_text
+                session['plan2'] = plan_text
 
+            return render_template(
+                "index.html",
+                response=response,
+                session=session,
+                goals=goals,
+                history1=history1,
+                history2=history2,
+                checkins1=checkins1,
+                checkins2=checkins2,
+                checked1=checked1,
+                checked2=checked2,
+                plan1=session.get("plan1", ""),
+                plan2=session.get("plan2","")
+            )
+            
         # Otherwise it is "GPT Conversation"
         if 'user_input' in request.form:
             user_input = request.form.get("user_input","").strip()
@@ -288,38 +336,6 @@ def index():
             (session['user_id'], goal_id, "assistant", response)
         )
         db.commit()
-
-    # No matter both check-in or conversation need to update the newest record
-    history1 = db.execute(
-        "SELECT role, message, timestamp FROM conversations WHERE user_id = ? AND goal_id = ? ORDER BY timestamp ASC",
-        (session['user_id'], goal1_id)
-    ).fetchall()
-
-    history2 = db.execute(
-        "SELECT role, message, timestamp FROM conversations WHERE user_id = ? AND goal_id = ? ORDER BY timestamp ASC",
-        (session['user_id'], goal2_id)
-    ).fetchall()
-
-    checkins1 = db.execute(
-        "SELECT date, completed FROM checkins WHERE user_id = ? AND goal_id = ? ORDER BY date DESC",
-        (session['user_id'], goal1_id)
-    ).fetchall()
-
-    checkins2 = db.execute(
-        "SELECT date, completed FROM checkins WHERE user_id = ? AND goal_id = ? ORDER BY date DESC",
-        (session['user_id'], goal2_id)
-    ).fetchall()
-
-    today = datetime.date.today()
-    checked1 = db.execute(
-        "SELECT * FROM checkins WHERE user_id = ? AND goal_id = ? AND date = ?",
-        (session['user_id'], goal1_id, today)
-    ).fetchone()
-
-    checked2 = db.execute(
-        "SELECT * FROM checkins WHERE user_id = ? AND goal_id = ? AND date = ?",
-        (session['user_id'], goal2_id, today)
-    ).fetchone()
     
 
     return render_template(
