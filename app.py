@@ -349,6 +349,7 @@ def index():
             (session['user_id'], goal_id, "assistant", response)
         )
         db.commit()
+        return redirect(url_for('index'))
     
 
     return render_template(
