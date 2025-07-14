@@ -5,6 +5,11 @@ import sqlite3
 import os
 import datetime
 from dotenv import load_dotenv
+from init_db import init_db
+
+if not os.path.exists("database.db"):
+    print("Database not found. Initialising...")
+    init_db()
 
 #Loading API
 load_dotenv()
