@@ -128,6 +128,7 @@ def goal_setting():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = None
+
     if request.method == 'POST':
         email = request.form["email"].strip().lower()
         password = request.form["password"]
@@ -153,6 +154,8 @@ def login():
 def index():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    
+    gpt_model = "gpt-4.1"
 
     import datetime
     db = get_db()
@@ -259,7 +262,7 @@ def index():
             messages.append({"role": "user", "content": "What is the plan"})
 
             completion = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model=gpt_model,
                 messages=messages
             )
             plan_text = completion.choices[0].message.content.strip()
@@ -327,7 +330,7 @@ def index():
         from openai import OpenAI
         #client = OpenAI(api_key=api_key)
         completion = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model = gpt_model,
             messages=messages
         )
         response = completion.choices[0].message.content
