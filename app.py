@@ -5,6 +5,7 @@ import sqlite3
 import os
 import datetime
 from dotenv import load_dotenv
+from init_db import init_db
 
 #Loading API
 load_dotenv()
@@ -19,6 +20,10 @@ DATABASE = 'database.db'
 
 # Connect sqlite
 def get_db():
+    if not os.path.exists("database.db"):
+        print("Database is not exists, building database")
+        init_db()
+        
     if 'db' not in g:
         g.db = sqlite3.connect(DATABASE)
         g.db.row_factory = sqlite3.Row
