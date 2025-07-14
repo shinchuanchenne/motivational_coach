@@ -23,7 +23,7 @@ def get_db():
     if not os.path.exists("database.db"):
         print("Database is not exists, building database")
         init_db()
-        
+
     if 'db' not in g:
         g.db = sqlite3.connect(DATABASE)
         g.db.row_factory = sqlite3.Row
@@ -372,5 +372,5 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-if __name__ == "__main__":
-    app.run(debug=True)
+#if __name__ == "__main__":
+#   app.run(debug=True)
