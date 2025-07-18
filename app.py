@@ -3,10 +3,15 @@ from openai import OpenAI
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import os
-import datetime
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 from init_db import init_db
 
+if not os.path.exists("database.db"):
+    print("Database not found. Initialising...")
+    init_db()
+now = datetime.now(ZoneInfo("Europe/London"))
 #Loading API
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
@@ -349,6 +354,7 @@ def index():
             (session['user_id'], goal_id, "assistant", response)
         )
         db.commit()
+        return redirect(url_for('index'))
     
 
     return render_template(
