@@ -3,9 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Reset Link - Motivational Coach</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='login_style.css') }}">
 </head>
 <body>
-    
+    {% if session.get('lang') == 'zh' %}
+        <h2>密碼重設連結</h2>
+        <p>請點擊下方的連結來重新設定你的密碼（有效期間30分鐘）</p>
+    {% else %}
+        <h2>Reset Password Link</h2>
+        <p>Please click the link below to reset your password (valid for 30 minutes)</p>
+    {% endif %}
+
+    <p><a href="{{ reset_link }}">{{ reset_link }}</a></p>
+
+    <p><a href="{{ url_for('login') }}">
+        {% if session.get('lang') == 'zh' %}
+            返回登入頁
+        {% else %}
+            Back to login page
+        {% endif %}
+    </a></p>
+
 </body>
 </html>
