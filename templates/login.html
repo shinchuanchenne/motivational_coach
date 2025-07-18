@@ -44,6 +44,7 @@
 
 
     <p>還沒有帳號？<a href="{{ url_for('signup') }}">註冊</a></p>
+    <p>忘記密碼？<a href="{{ url_for('forgot_password') }}">請點擊這裡</a></p>
     
     {% else %}
         <h2>Login to Motivational Coach</h2>
@@ -68,6 +69,8 @@
     
 
         <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign up</a></p>
+        <p>Forgot password? <a href="{{ url_for('forgot_password') }}">Click here</a></p>
+
     {% endif %}    
 
 

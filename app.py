@@ -160,6 +160,11 @@ def login():
     return render_template("login.html", error=error)
 
 
+@app.route("/forgot_password", methods=["GET", "POST"])
+def forgot_password():
+    return ""
+
+
 @app.route("/index", methods=["GET", "POST"])
 def index():
     if 'user_id' not in session:
@@ -378,5 +383,5 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-#if __name__ == "__main__":
-#   app.run(debug=True)
+if __name__ == "__main__":
+   app.run(debug=True)
