@@ -7,6 +7,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 from init_db import init_db
+from itsdangerous import URLSafeTimedSerializer
 
 if not os.path.exists("database.db"):
     print("Database not found. Initialising...")
@@ -162,7 +163,28 @@ def login():
 
 @app.route("/forgot_password", methods=["GET", "POST"])
 def forgot_password():
-    return ""
+    # Using Flask as secret_key
+    if request.method == "POST":
+        email = request.form["email"].strip().lower()
+
+        # Find this email is exist or not?
+        db = get_db()
+        user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+
+        # Show user that this email is not exist.
+        if not user:
+            if session.get('lang') == 'zh':
+                error = "該 Email 不存在"
+            else:
+                error = "Email not found"
+            return render_template("forgot_password.html", error=error)
+        
+
+        # Generate token and set reset URL
+        s = URLSafeTimedSerializer(app.secret_key)
+        token = s.dumps(email, salt="password-reset")
+        reset_link = url_for("reset_password", token=token, _external=True)
+        return render_template("show_reset_link.html", reset_link=reset_link)
 
 
 @app.route("/index", methods=["GET", "POST"])
