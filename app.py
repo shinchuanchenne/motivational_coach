@@ -21,6 +21,12 @@ client = OpenAI(api_key=api_key)
 app = Flask(__name__)
 app.secret_key = 'supersecret'
 
+# Initialise Database
+@app.route("/init_db")
+def init_db_route():
+    from init_db import init_db
+    init_db()
+    return "Database initialised!"
 
 # PostgreSQL connection
 def get_db():
