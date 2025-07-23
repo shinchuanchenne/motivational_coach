@@ -9,9 +9,21 @@
     {% if session.get('lang') == 'zh' %}
     <h2>歡迎來到動機教練</h2>
     <p>登入帳號： <strong>{{session.email}}</strong></p>
-    <form method="GET" action="/logout">
-        <button type="submit">登出</button>
-    </form>
+
+    <div class="navbar">
+        <ul>
+          <li><a href="{{ url_for('index') }}">我的介面</a></li>
+          <li><a href="/achievements">成就系統</a></li>
+          <li><a href="/help">說明頁</a></li>
+          <li>
+            <a href="{{ url_for('set_language', lang='zh' if session.get('lang') == 'en' else 'en') }}">
+              切換語言
+            </a>
+          </li>
+          <li><a href="{{ url_for('logout') }}">登出</a></li>
+        </ul>
+    </div>
+
     <div class="container">
 
         <div class="column">
@@ -142,9 +154,20 @@
     {% else %}
     <h1>Welcome to Motivational Coach</h1>
     <p>Logged in as: <strong>{{session.email}}</strong></p>
-    <form method="GET" action="/logout">
-        <button type="submit">Logout</button>
-    </form>
+
+    <div class="navbar">
+        <ul>
+          <li><a href="{{ url_for('index') }}">My Page</a></li>
+          <li><a href="/achievements">Achievements</a></li>
+          <li><a href="/help">Help</a></li>
+          <li>
+            <a href="{{ url_for('set_language', lang='zh' if session.get('lang') == 'en' else 'en') }}">
+              Change Language
+            </a>
+          </li>
+          <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
 
     <div class="container">
 
