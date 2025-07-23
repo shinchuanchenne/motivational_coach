@@ -1,58 +1,78 @@
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import os
+from urllib.parse import urlparse
+from dotenv import load_dotenv
 
 def init_db():
-    #Step 1: Build SQLite connection
-    connection = sqlite3.connect('database.db')
-    cursor = connection.cursor()
+    try:
+        #Step 1: Build connection
+        load_dotenv()
+        url = urlparse(os.getenv("DATABASE_URL"))
 
-    #Step 2: Create users table
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+        connection = psycopg2.connect(
+            dbname=url.path[1:],
+            user=url.username,
+            password=url.password,
+            host=url.hostname,
+            port=url.port
+        )
+        cursor = connection.cursor(cursor_factory=RealDictCursor)
+        
+        #Step 2: Create users table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
                 name TEXT,
                 email TEXT UNIQUE,
                 password TEXT
-                )
-                ''')
+            );
+        """)
 
-    #Step 3: Create goals table
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS goals (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
+        #Step 3: Create goals table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS goals (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
                 goal_text TEXT,
-                tone TEXT,
-                FOREIGN KEY(user_id) REFERENCES users(id)
-                    )
-                ''')
+                tone TEXT
+            );
+        """)
 
-    #Step 4: Create checkins table
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS checkins (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                goal_id INTEGER,
+
+        #Step 4: Create checkins table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS checkins (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                goal_id INTEGER REFERENCES goals(id),
                 date DATE,
                 completed BOOLEAN,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(user_id) REFERENCES users(id),
-                FOREIGN KEY(goal_id) REFERENCES goals(id))
-                ''')
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
 
-    #Step 5: Create conversations table
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS conversations (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                goal_id INTEGER,
+        #Step 5: Create conversations table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS conversations (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                goal_id INTEGER REFERENCES goals(id),
                 role TEXT, -- "user" or "gpt"
                 message TEXT,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(user_id) REFERENCES users(id),
-                FOREIGN KEY(goal_id) REFERENCES goals(id)
-                )
-                ''')
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
 
-    connection.commit()
-    connection.close()
-    print("initialise database finished!")
+        connection.commit()
+        connection.close()
+        print("PostgreSQL database initialised!")
+    
+    except Exception as e:
+        print("Failed to initialise DB:", e)
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+if __name__ == "__main__":
+    init_db()

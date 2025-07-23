@@ -1,7 +1,9 @@
 from flask import Flask, request, render_template, redirect, url_for, session, g, flash, get_flashed_messages
 from openai import OpenAI
 from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3
+import psycopg2
+import psycopg2.extras
+from urllib.parse import urlparse
 import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -9,10 +11,7 @@ from dotenv import load_dotenv
 from init_db import init_db
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
-if not os.path.exists("database.db"):
-    print("Database not found. Initialising...")
-    init_db()
-now = datetime.now(ZoneInfo("Europe/London"))
+
 #Loading API
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
@@ -21,18 +20,21 @@ api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 app = Flask(__name__)
 app.secret_key = 'supersecret'
-DATABASE = 'database.db'
 
 
-# Connect sqlite
+# PostgreSQL connection
 def get_db():
-    if not os.path.exists("database.db"):
-        print("Database is not exists, building database")
-        init_db()
-
     if 'db' not in g:
-        g.db = sqlite3.connect(DATABASE)
-        g.db.row_factory = sqlite3.Row
+        url = urlparse(os.getenv("DATABASE_URL"))
+        g.db = psycopg2.connect(
+            dbname=url.path[1:],
+            user=url.username,
+            password=url.password,
+            host=url.hostname,
+            port=url.port,
+            cursor_factory=psycopg2.extras.RealDictCursor
+        )
+        g.db.autocommit = True
     return g.db
 
 
