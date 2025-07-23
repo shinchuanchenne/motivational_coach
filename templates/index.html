@@ -9,9 +9,22 @@
     {% if session.get('lang') == 'zh' %}
     <h2>歡迎來到動機教練</h2>
     <p>登入帳號： <strong>{{session.email}}</strong></p>
-    <form method="GET" action="/logout">
-        <button type="submit">登出</button>
-    </form>
+
+    <div class="navbar">
+        <ul>
+          <li><a href="{{ url_for('index') }}">我的介面</a></li>
+          <li><a href="javascript:void(0)" onclick="alert('Under construction...')">成就系統</a></li>
+          <!--          <li><a href="/achievements">成就系統</a></li> -->
+          <li><a href="#" onclick="openHelpModal()">說明頁</a></li>
+          <li>
+            <a href="javascript:void(0)" onclick="alert('Under construction...')">切換語言
+            </a>
+          </li>
+<!-- <a href="{{ url_for('set_language', lang='zh' if session.get('lang') == 'en' else 'en') }}">切換語言 </a> -->
+          <li><a href="{{ url_for('logout') }}">登出</a></li>
+        </ul>
+    </div>
+
     <div class="container">
 
         <div class="column">
@@ -139,12 +152,49 @@
         </div>
     </div>
 
+    <!-- Helping page modal-->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h2> 歡迎使用動機教練</h2>
+            <p>這是一個能幫助你建立好習慣的系統，其中提供了2種教練風格：</p>
+            <li>第一個目標為鼓勵型教練，能鼓勵你每天堅持下去</li>
+            <li>第二個目標為嚴格型教練，會嚴厲指導，讓你不偷懶</li>
+
+            <h3>討論計劃！</h3>
+            <p>如果你不知道要如何開始的話，你可以在：讓我們來跟教練討論今天的計劃吧！裡面</p>
+            <p>按下“生成今日的行動建議”，讓教練給你今天應該要做什麼</p>
+            <p>如果今天有特殊的條件和需求，你也可以在“提供條件”這一欄輸入條件</p>
+            <p>譬如：你的目標是每天運動30分鐘，你可以在提供條件中輸入”今天我會去健身房”，或是“我今天想要做瑜伽”，讓教練在給你建議的時候，考量到你的狀況和需求。</p>
+
+            <h3>和教練聊天</h3>
+            <p>當你在運動的時候，可以在這一區和教練聊天。你可以告訴教練目前的進度，向他詢問有關於達成目標的問題。</p>
+            <p>譬如：
+                <li>以運動來說，可以是：“伏地挺身的時候，手掌要怎麼擺呢？”</li>
+                <li>以學習來說，可以是：“英文文法要怎麼學呢？</li>
+            </p>
+            <p>教練會根據他的知識以及他的個性來回答你</p>
+
+            <h3>你今天達標了嗎？</h3>
+            <p>當你完成了今天的目標，可以在下方點擊“我今天完成目標了！”</p>
+            <p>系統會記錄今天你是否達成了目標</p>
+        </div>
+        </div>
+
+
     {% else %}
     <h1>Welcome to Motivational Coach</h1>
     <p>Logged in as: <strong>{{session.email}}</strong></p>
-    <form method="GET" action="/logout">
-        <button type="submit">Logout</button>
-    </form>
+
+    <div class="navbar">
+        <ul>
+          <li><a href="{{ url_for('index') }}">My Page</a></li>
+          <li><a href="javascript:void(0)" onclick="alert('Under construction...')">Achievements</a></li>
+          <li><a href="#" onclick="openHelpModal()">Help</a></li>
+          <li><a href="javascript:void(0)" onclick="alert('Under construction...')">Change Language</a></li>
+          <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
 
     <div class="container">
 
@@ -276,6 +326,35 @@
             </ul>
         </div>
     </div>
+
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+          <span class="close-button" onclick="closeModal()">&times;</span>
+          <h2>Welcome to Motivational Coach</h2>
+          <p>This is a system designed to help you build good habits. It offers two coaching styles:</p>
+          <li>Your first goal is assigned an <strong>encouraging coach</strong>, who motivates you daily to keep going.</li>
+          <li>Your second goal has a <strong>strict coach</strong>, who gives firm guidance and pushes you to stay disciplined.</li>
+      
+          <h3>Discuss the Plan</h3>
+          <p>If you're not sure where to start, you can use the “Let's make a plan with coach!” section.</p>
+          <p>Click the “Plan My Day” button to let the coach suggest what to do today.</p>
+          <p>If you have special needs or conditions today, you can enter them in the “Add a condition” field.</p>
+          <p>For example: if your goal is to exercise 30 minutes a day, you can type “I’ll go to the gym today” or “I want to do yoga today.” This helps the coach personalize the suggestions for your situation.</p>
+      
+          <h3>Chat with Your Coach</h3>
+          <p>During the day, you can chat with your coach in the conversation section. Tell them your progress, or ask for advice to reach your goal.</p>
+          <p>Examples:
+            <li>For exercise: “When doing push-ups, how should I place my hands?”</li>
+            <li>For learning: “How should I study English grammar?”</li>
+          </p>
+          <p>The coach will reply based on their personality and knowledge.</p>
+      
+          <h3>Did You Complete Your Goal Today?</h3>
+          <p>When you’ve completed your goal for the day, click “I completed this goal today!”</p>
+          <p>The system will log your progress automatically.</p>
+        </div>
+      </div>
+         
     {% endif %}
 </body>
 <script>
@@ -295,6 +374,13 @@
         document.querySelectorAll(".chat-history").forEach(function(chat){
             chat.scrollTop = chat.scrollHeight;
         })
+    }
+
+    function openHelpModal() {
+        document.getElementById("helpModal").style.display = "block";
+    }
+    function closeModal() {
+        document.getElementById("helpModal").style.display = "none";
     }
     </script>
     
