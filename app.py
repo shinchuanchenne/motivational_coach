@@ -7,7 +7,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 from init_db import init_db
-from itsdangerous import URLSafeTimedSerializer
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
 if not os.path.exists("database.db"):
     print("Database not found. Initialising...")
@@ -185,7 +185,42 @@ def forgot_password():
         token = s.dumps(email, salt="password-reset")
         reset_link = url_for("reset_password", token=token, _external=True)
         return render_template("show_reset_link.html", reset_link=reset_link)
+    return render_template("forgot_password.html")
 
+@app.route("/reset_password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    if request.method == "POST":
+        #User send new password
+        password = request.form["password"]
+
+        s = URLSafeTimedSerializer(app.secret_key)
+
+        try:
+            email = s.loads(token, salt="password-reset", max_age=1800)
+            db = get_db()
+            user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+
+            if not user:
+                return "<p>Cannot find user email.</p>"
+            
+            hashed_pw = generate_password_hash(password)
+
+            db.execute("UPDATE users SET password = ? WHERE email = ?", (hashed_pw, email))
+            db.commit()
+
+            return """
+    <p>Password is updated, please log in again.</p>
+    <a href='/login'>Go to Login Page</a><br>
+"""
+
+
+        except SignatureExpired:
+            return "<p>Link has expired, please apply it again.</p>"
+        except BadSignature:
+            return "<p>Invalid reset link</p>"
+    else:
+        #Show new password form.
+        return render_template("reset_password.html", token=token)
 
 @app.route("/index", methods=["GET", "POST"])
 def index():
