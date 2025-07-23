@@ -69,7 +69,9 @@ def signup():
         name = request.form["name"].strip()
 
         db = get_db()
-        existing_user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+        existing_user = cur.fetchone()
         if existing_user:
             return "<p>Email already registered. Please use another email.</p>"
         else:
@@ -98,7 +100,7 @@ def goal_setting():
         goal2 = request.form["goal2"].strip()
 
         tone1 = "encouraging"
-        tone2 = "strict"          
+        tone2 = "strict"
 
         if not goal1 or not goal2:
             error = "Please enter 2 goals"
@@ -106,31 +108,31 @@ def goal_setting():
             try:
                 signup_data = session["pending_signup"]
                 db = get_db()
+                cur = db.cursor()
 
-                db.execute(
-                    "INSERT INTO users (email, password, name) VALUES (?, ?, ?)",
+                cur.execute(
+                    "INSERT INTO users (email, password, name) VALUES (%s, %s, %s)",
                     (signup_data['email'], signup_data['password'], signup_data['name'])
                 )
-                db.commit()
 
-                user = db.execute("SELECT * FROM users WHERE email = ?", (signup_data['email'],)).fetchone()
+                cur.execute("SELECT * FROM users WHERE email = %s", (signup_data['email'],))
+                user = cur.fetchone()
 
-                db.execute(
-                    "INSERT INTO goals (user_id, goal_text, tone) VALUES (?, ?, ?)",
+                cur.execute(
+                    "INSERT INTO goals (user_id, goal_text, tone) VALUES (%s, %s, %s)",
                     (user['id'], goal1, "encouraging")
                 )
-                db.execute(
-                    "INSERT INTO goals (user_id, goal_text, tone) VALUES (?, ?, ?)",
+                cur.execute(
+                    "INSERT INTO goals (user_id, goal_text, tone) VALUES (%s, %s, %s)",
                     (user['id'], goal2, "strict")
                 )
-                db.commit()
 
                 session.pop('pending_signup')
                 session['user_id'] = user['id']
                 session['email'] = user['email']
                 session['goals_set'] = True
 
-                return redirect(url_for('index'))                
+                return redirect(url_for('index'))
             except Exception as e:
                 print("Goal setting error:", e)
                 error = "Failed, please try it later."
@@ -147,7 +149,9 @@ def login():
         password = request.form["password"]
 
         db = get_db()
-        user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+        user = cur.fetchone()
 
         if user and check_password_hash(user["password"], password):
             #Login success
@@ -158,7 +162,7 @@ def login():
         else:
             #Login fail
             flash("帳號或密碼錯誤" if session.get('lang') == 'zh' else "Invalid email or password")
-            return redirect(url_for('login'))  # Redirect insead of render_template
+            return redirect(url_for('login'))  # Redirect instead of render_template
         
     return render_template("login.html", error=error)
 
@@ -171,7 +175,9 @@ def forgot_password():
 
         # Find this email is exist or not?
         db = get_db()
-        user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+        user = cur.fetchone()
 
         # Show user that this email is not exist.
         if not user:
@@ -180,7 +186,6 @@ def forgot_password():
             else:
                 error = "Email not found"
             return render_template("forgot_password.html", error=error)
-        
 
         # Generate token and set reset URL
         s = URLSafeTimedSerializer(app.secret_key)
@@ -200,22 +205,21 @@ def reset_password(token):
         try:
             email = s.loads(token, salt="password-reset", max_age=1800)
             db = get_db()
-            user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+            cur = db.cursor()
+            cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+            user = cur.fetchone()
 
             if not user:
                 return "<p>Cannot find user email.</p>"
-            
+
             hashed_pw = generate_password_hash(password)
 
-            db.execute("UPDATE users SET password = ? WHERE email = ?", (hashed_pw, email))
-            db.commit()
+            cur.execute("UPDATE users SET password = %s WHERE email = %s", (hashed_pw, email))
 
             return """
     <p>Password is updated, please log in again.</p>
     <a href='/login'>Go to Login Page</a><br>
 """
-
-
         except SignatureExpired:
             return "<p>Link has expired, please apply it again.</p>"
         except BadSignature:
@@ -233,10 +237,12 @@ def index():
 
     import datetime
     db = get_db()
-    goals = db.execute(
-        "SELECT id, goal_text, tone FROM goals WHERE user_id = ? ORDER BY id",
+    cur = db.cursor()
+    cur.execute(
+        "SELECT id, goal_text, tone FROM goals WHERE user_id = %s ORDER BY id",
         (session['user_id'],)
-    ).fetchall()
+    )
+    goals = cur.fetchall()
 
     goal1_id = goals[0]['id']
     goal2_id = goals[1]['id']
@@ -244,36 +250,48 @@ def index():
     response = ""
 
     # No matter both check-in or conversation need to update the newest record
-    history1 = db.execute(
-        "SELECT role, message, timestamp FROM conversations WHERE user_id = ? AND goal_id = ? ORDER BY timestamp ASC",
+    cur = db.cursor()
+    cur.execute(
+        "SELECT role, message, timestamp FROM conversations WHERE user_id = %s AND goal_id = %s ORDER BY timestamp ASC",
         (session['user_id'], goal1_id)
-    ).fetchall()
+    )
+    history1 = cur.fetchall()
 
-    history2 = db.execute(
-        "SELECT role, message, timestamp FROM conversations WHERE user_id = ? AND goal_id = ? ORDER BY timestamp ASC",
+    cur = db.cursor()
+    cur.execute(
+        "SELECT role, message, timestamp FROM conversations WHERE user_id = %s AND goal_id = %s ORDER BY timestamp ASC",
         (session['user_id'], goal2_id)
-    ).fetchall()
+    )
+    history2 = cur.fetchall()
 
-    checkins1 = db.execute(
-        "SELECT date, completed FROM checkins WHERE user_id = ? AND goal_id = ? ORDER BY date DESC",
+    cur = db.cursor()
+    cur.execute(
+        "SELECT date, completed FROM checkins WHERE user_id = %s AND goal_id = %s ORDER BY date DESC",
         (session['user_id'], goal1_id)
-    ).fetchall()
+    )
+    checkins1 = cur.fetchall()
 
-    checkins2 = db.execute(
-        "SELECT date, completed FROM checkins WHERE user_id = ? AND goal_id = ? ORDER BY date DESC",
+    cur = db.cursor()
+    cur.execute(
+        "SELECT date, completed FROM checkins WHERE user_id = %s AND goal_id = %s ORDER BY date DESC",
         (session['user_id'], goal2_id)
-    ).fetchall()
+    )
+    checkins2 = cur.fetchall()
 
     today = datetime.date.today()
-    checked1 = db.execute(
-        "SELECT * FROM checkins WHERE user_id = ? AND goal_id = ? AND date = ?",
+    cur = db.cursor()
+    cur.execute(
+        "SELECT * FROM checkins WHERE user_id = %s AND goal_id = %s AND date = %s",
         (session['user_id'], goal1_id, today)
-    ).fetchone()
+    )
+    checked1 = cur.fetchone()
 
-    checked2 = db.execute(
-        "SELECT * FROM checkins WHERE user_id = ? AND goal_id = ? AND date = ?",
+    cur = db.cursor()
+    cur.execute(
+        "SELECT * FROM checkins WHERE user_id = %s AND goal_id = %s AND date = %s",
         (session['user_id'], goal2_id, today)
-    ).fetchone()    
+    )
+    checked2 = cur.fetchone()
 
     plan1 = session.get("plan1", "")
     plan2 = session.get("plan2", "")
@@ -281,19 +299,22 @@ def index():
     if request.method == "POST":
         goal_id = int(request.form["goal_id"])
         today = datetime.date.today()
-        
-        # Check whether is "check-in" request. 
+
+        # Check whether is "check-in" request.
         if 'checkin' in request.form:
             if request.form.get("checkin") == '1':
                 today = datetime.date.today()
-                already = db.execute(
-                    "SELECT * FROM checkins WHERE user_id = ? AND goal_id = ? AND date = ?",
+                cur = db.cursor()
+                cur.execute(
+                    "SELECT * FROM checkins WHERE user_id = %s AND goal_id = %s AND date = %s",
                     (session['user_id'], goal_id, today)
-                ).fetchone()
+                )
+                already = cur.fetchone()
 
                 if not already:
-                    db.execute(
-                        "INSERT INTO checkins (user_id, goal_id, date, completed) VALUES (?, ?, ?, ?)",
+                    cur = db.cursor()
+                    cur.execute(
+                        "INSERT INTO checkins (user_id, goal_id, date, completed) VALUES (%s, %s, %s, %s)",
                         (session['user_id'], goal_id, today, True)
                     )
                     db.commit()
@@ -304,14 +325,14 @@ def index():
                 return redirect(url_for('index'))
             elif request.form["checkin"] == "0":
                 # Undo check-in
-                db.execute(
-                    "DELETE FROM checkins WHERE user_id = ? AND goal_id = ? AND date = ?",
+                cur = db.cursor()
+                cur.execute(
+                    "DELETE FROM checkins WHERE user_id = %s AND goal_id = %s AND date = %s",
                     (session['user_id'], goal_id, today)
                 )
                 db.commit()
                 flash("Check-in undone!")
             return redirect(url_for('index'))
-        
 
         # Check if this is a "daily plan generation" request
         elif 'user_note' in request.form:
@@ -325,13 +346,12 @@ def index():
             if user_note:
                 instruction += f" The user says: '{user_note}."
             if session.get('lang') == 'zh':
-
                 instruction += " Please reply in Traditional Chinese as used in Taiwan."
             if tone == "strict":
                 instruction = f"You are a strict and demanding coach. {instruction} Be firm and push the user to do better."
             elif tone == "encouraging":
                 instruction = f"You are a warm and supportive coach. {instruction} Encourage the user kindly and positively."
-            
+
             messages = [{"role": "system", "content": instruction}]
             messages.append({"role": "user", "content": "What is the plan"})
 
@@ -364,29 +384,33 @@ def index():
                 plan1=session.get("plan1",""),
                 plan2=session.get("plan2","")
             )
-            
+
         # Otherwise it is "GPT Conversation"
         if 'user_input' in request.form:
             user_input = request.form.get("user_input","").strip()
-            
+
         goal = next((g for g in goals if g["id"] == goal_id), None)
         tone = goal["tone"] if goal else "encouraging"
 
         db = get_db()
 
-        #Get user data
-        user = db.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
+        # Get user data
+        cur = db.cursor()
+        cur.execute("SELECT * FROM users WHERE id = %s", (session['user_id'],))
+        user = cur.fetchone()
 
         # Get history
-        history = db.execute("SELECT role, message FROM conversations WHERE user_id = ? AND goal_id = ? ORDER BY timestamp ASC",
-                             (session['user_id'], goal_id)).fetchall()
+        cur = db.cursor()
+        cur.execute("SELECT role, message FROM conversations WHERE user_id = %s AND goal_id = %s ORDER BY timestamp ASC",
+                    (session['user_id'], goal_id))
+        history = cur.fetchall()
 
         instruction = "You are a assistant."
         if tone == "strict":
             instruction = f"You are a strict and demanding coach helping {user['name']} achieve the goal: '{goal['goal_text']}. Be firm and push them to do better."
         elif tone == "encouraging":
             instruction = f"You are a warm and supportive coach who praises the user: {user['name']} stay motivated for the goal: '{goal['goal_text']}. Encourages them with kindness and support."
-                
+
         print(f"Session: {session.get('lang')}")
         # If language is Chinese, use traditional Chinese:
         if session.get('lang') == 'zh':
@@ -402,19 +426,20 @@ def index():
 
         # Send this to GPT
         from openai import OpenAI
-        #client = OpenAI(api_key=api_key)
         completion = client.chat.completions.create(
             model = gpt_model,
             messages=messages
         )
         response = completion.choices[0].message.content
 
-        db.execute(
-            "INSERT INTO conversations (user_id, goal_id, role, message) VALUES (?, ?, ?, ?)",
+        cur = db.cursor()
+        cur.execute(
+            "INSERT INTO conversations (user_id, goal_id, role, message) VALUES (%s, %s, %s, %s)",
             (session['user_id'], goal_id, "user", user_input)
         )
-        db.execute(
-            "INSERT INTO conversations (user_id, goal_id, role, message) VALUES (?, ?, ?, ?)",
+        cur = db.cursor()
+        cur.execute(
+            "INSERT INTO conversations (user_id, goal_id, role, message) VALUES (%s, %s, %s, %s)",
             (session['user_id'], goal_id, "assistant", response)
         )
         db.commit()
