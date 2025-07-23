@@ -73,6 +73,3 @@ def init_db():
     finally:
         if 'connection' in locals():
             connection.close()
-
-if __name__ == "__main__":
-    init_db()
