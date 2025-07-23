@@ -147,3 +147,40 @@ button:hover {
   .navbar a:hover {
     background-color: #d0d0d0;
   }
+
+  /* Helping page */
+
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 999;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.4);
+  }
+  
+  .modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 30px;
+    border-radius: 12px;
+    width: 80%;
+    max-width: 600px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  
+  .close-button {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    right: 16px;
+    top: 8px;
+    cursor: pointer;
+  }
+  .close-button:hover {
+    color: black;
+  }
