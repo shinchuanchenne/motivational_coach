@@ -473,7 +473,3 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-
-if __name__ == "__main__":
-    # Only for local testing
-    app.run(debug=True)
