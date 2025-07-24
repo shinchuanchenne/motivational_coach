@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Password Reset Sent</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    {% if session.get('lang') == 'zh' %}
+        <h2>重設密碼連結已寄出</h2>
+        <p>請查看你的 Email 信箱（有效 30 分鐘）</p>
+        <a href="{{ url_for('login') }}">返回登入頁</a>
+    {% else %}
+        <h2>Password Reset Link Sent</h2>
+        <p>Please check your email inbox (valid for 30 minutes)</p>
+        <a href="{{ url_for('login') }}">Back to login page</a>
+    {% endif %}
+</body>
+</html>
