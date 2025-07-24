@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 from init_db import init_db
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
-
+from flask_mail import Mail, Message
 
 #Loading API
 load_dotenv()
@@ -20,6 +20,16 @@ api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 app = Flask(__name__)
 app.secret_key = 'supersecret'
+
+
+# Reset password with mail
+app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER")
+app.config["MAIL_PORT"] = int(os.getenv("MAIL_PORT"))
+app.config["MAIL_USE_TLS"] = os.getenv("MAIL_USE_TLS") == "True"
+app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+mail = Mail(app)
+
 
 # Initialise Database
 @app.route("/init_db")
@@ -197,8 +207,23 @@ def forgot_password():
         s = URLSafeTimedSerializer(app.secret_key)
         token = s.dumps(email, salt="password-reset")
         reset_link = url_for("reset_password", token=token, _external=True)
-        return render_template("show_reset_link.html", reset_link=reset_link)
+
+        # Send email to message:
+        msg = Message(
+            subject="Motivational Coach - Reset your password",
+            sender=app.config["MAIL_USERNAME"],
+            recipients=[email],
+            body=f"Hello, here is your password reset link (valid for 30 minutes):\n\n{reset_link}"
+        )
+        mail.send(msg)
+
+        return redirect(url_for("reset_email_sent"))
     return render_template("forgot_password.html")
+
+@app.route("/reset_email_sent")
+def reset_email_sent():
+    return render_template("reset_email_sent.html")
+
 
 @app.route("/reset_password/<token>", methods=["GET", "POST"])
 def reset_password(token):
@@ -472,6 +497,7 @@ def index():
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
 
 
 if __name__ == "__main__":
