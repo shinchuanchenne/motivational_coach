@@ -115,9 +115,6 @@ def goal_setting():
         goal1 = request.form["goal1"].strip()
         goal2 = request.form["goal2"].strip()
 
-        tone1 = "encouraging"
-        tone2 = "strict"
-
         if not goal1 or not goal2:
             error = "Please enter 2 goals"
         else:
