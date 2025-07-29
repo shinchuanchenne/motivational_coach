@@ -25,7 +25,8 @@ def init_db():
                 id SERIAL PRIMARY KEY,
                 name TEXT,
                 email TEXT UNIQUE,
-                password TEXT
+                password TEXT,
+                language TEXT DEFAULT 'en'
             );
         """)
 
