@@ -127,8 +127,8 @@ def goal_setting():
                 cur = db.cursor()
 
                 cur.execute(
-                    "INSERT INTO users (email, password, name) VALUES (%s, %s, %s)",
-                    (signup_data['email'], signup_data['password'], signup_data['name'])
+                    "INSERT INTO users (email, password, name, language) VALUES (%s, %s, %s, %s)",
+                    (signup_data['email'], signup_data['password'], signup_data['name'], session.get('lang', 'en'))
                 )
 
                 cur.execute("SELECT * FROM users WHERE email = %s", (signup_data['email'],))
@@ -174,6 +174,7 @@ def login():
             session['user_id'] = user['id']
             session['email'] = user['email']
             session['goals_set'] = False
+            session['lang'] = user.get('language', 'en')
             return redirect(url_for('index'))
         else:
             #Login fail
