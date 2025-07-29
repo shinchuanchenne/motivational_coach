@@ -16,11 +16,7 @@
           <li><a href="javascript:void(0)" onclick="alert('Under construction...')">成就系統</a></li>
           <!--          <li><a href="/achievements">成就系統</a></li> -->
           <li><a href="#" onclick="openHelpModal()">說明頁</a></li>
-          <li>
-            <a href="javascript:void(0)" onclick="alert('Under construction...')">切換語言
-            </a>
-          </li>
-<!-- <a href="{{ url_for('set_language', lang='zh' if session.get('lang') == 'en' else 'en') }}">切換語言 </a> -->
+          <li><a href="{{ url_for('toggle_language') }}">切換語言</a></li>
           <li><a href="{{ url_for('logout') }}">登出</a></li>
         </ul>
     </div>
@@ -191,7 +187,7 @@
           <li><a href="{{ url_for('index') }}">My Page</a></li>
           <li><a href="javascript:void(0)" onclick="alert('Under construction...')">Achievements</a></li>
           <li><a href="#" onclick="openHelpModal()">Help</a></li>
-          <li><a href="javascript:void(0)" onclick="alert('Under construction...')">Change Language</a></li>
+          <li><a href="{{ url_for('toggle_language') }}">Change Language</a></li>
           <li><a href="{{ url_for('logout') }}">Logout</a></li>
         </ul>
     </div>

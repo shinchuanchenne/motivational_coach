@@ -127,8 +127,8 @@ def goal_setting():
                 cur = db.cursor()
 
                 cur.execute(
-                    "INSERT INTO users (email, password, name) VALUES (%s, %s, %s)",
-                    (signup_data['email'], signup_data['password'], signup_data['name'])
+                    "INSERT INTO users (email, password, name, language) VALUES (%s, %s, %s, %s)",
+                    (signup_data['email'], signup_data['password'], signup_data['name'], session.get('lang', 'en'))
                 )
 
                 cur.execute("SELECT * FROM users WHERE email = %s", (signup_data['email'],))
@@ -174,6 +174,7 @@ def login():
             session['user_id'] = user['id']
             session['email'] = user['email']
             session['goals_set'] = False
+            session['lang'] = user.get('language', 'en')
             return redirect(url_for('index'))
         else:
             #Login fail
@@ -258,6 +259,28 @@ def reset_password(token):
     else:
         #Show new password form.
         return render_template("reset_password.html", token=token)
+
+@app.route("/toggle_language")
+def toggle_language():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT language FROM users WHERE id = %s", (session['user_id'],))
+    user = cur.fetchone()
+
+    current_lang = user.get("language", "en")
+    new_lang = "zh" if current_lang == "en" else "en"
+
+    # update to new lang in DB
+    cur.execute("UPDATE users SET language = %s WHERE id = %s", (new_lang, session['user_id']))
+    db.commit()
+
+    # also update session (for rendering)
+    session['lang'] = new_lang
+
+    return redirect(url_for("index"))
 
 @app.route("/index", methods=["GET", "POST"])
 def index():
