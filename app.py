@@ -522,6 +522,12 @@ def logout():
     return redirect(url_for('login'))
 
 
+#Send reminder
+@app.route("/send_reminder")
+def send_reminder_route():
+    from reminder import send_reminders
+    send_reminders()
+    return "Email reminders sent!"
 
 if __name__ == "__main__":
     # Only for local testing
