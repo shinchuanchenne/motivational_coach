@@ -260,6 +260,28 @@ def reset_password(token):
         #Show new password form.
         return render_template("reset_password.html", token=token)
 
+@app.route("/toggle_language")
+def toggle_language():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT language FROM users WHERE id = %s", (session['user_id'],))
+    user = cur.fetchone()
+
+    current_lang = user.get("language", "en")
+    new_lang = "zh" if current_lang == "en" else "en"
+
+    # update to new lang in DB
+    cur.execute("UPDATE users SET language = %s WHERE id = %s", (new_lang, session['user_id']))
+    db.commit()
+
+    # also update session (for rendering)
+    session['lang'] = new_lang
+
+    return redirect(url_for("index"))
+
 @app.route("/index", methods=["GET", "POST"])
 def index():
     if 'user_id' not in session:
