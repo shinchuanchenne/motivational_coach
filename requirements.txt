@@ -23,6 +23,7 @@ pydantic==2.11.7
 pydantic_core==2.33.2
 python-dotenv==1.1.1
 pytz==2025.2
+schedule==1.2.2
 sniffio==1.3.1
 SQLAlchemy==2.0.41
 tqdm==4.67.1
