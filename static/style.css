@@ -185,3 +185,13 @@ button:hover {
     color: black;
   }
 
+  .goal-category p {
+    cursor: pointer;
+    background-color: #f0f0f0;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 5px;
+}
+.goal-category p:hover {
+    background-color: #e0e0ff;
+}
