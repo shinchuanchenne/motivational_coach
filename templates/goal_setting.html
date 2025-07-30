@@ -7,20 +7,86 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    <script>
+        const userLang = "{{ session.get('lang', 'en') }}";
+    </script>
 
     {% if session.get('lang') == 'zh' %}
-    <h2>請設定你的兩個想要養成的習慣</h2>
-    <form method="POST" action="/goal_setting">
-        <label>習慣1:</label><br>
-        <input type="text" name="goal1" required><br>
+        <h2>請設定你的兩個想要養成的習慣</h2>
+        <form method="POST" action="/goal_setting">
+            <label>習慣1:</label><br>
+            <input type="text" name="goal1" required><br>
 
-        </select><br><br>
+            </select><br><br>
 
-        <label>習慣2：</label><br>
-        <input type="text" name="goal2" required><br>
+            <label>習慣2：</label><br>
+            <input type="text" name="goal2" required><br>
 
-        <button type="submit">儲存目標</button>
-    </form>
+            <button type="submit">儲存目標</button>
+        </form>
+
+        <h3>或者，你可以點選以下推薦習慣：</h3>
+        <div>
+            <button onclick="showCategory('fitness')">運動習慣</button>
+            <button onclick="showCategory('learning')">學習習慣</button>
+            <button onclick="showCategory('wellBeing')">身心健康習慣</button>
+            <button onclick="showCategory('diet')">飲食健康習慣</button>
+            <button onclick="showCategory('productivity')">自律時間管理習慣</button>
+            <button onclick="showCategory('creativity')">興趣創作習慣</button>
+        </div>
+
+        <div id="fitness" class="goal-category">
+            <p onclick="fillGoal('每天走路 8000 步')">每天走路 8000 步</p>
+            <p onclick="fillGoal('每天做 30 分鐘運動')">每天做 30 分鐘運動</p>
+            <p onclick="fillGoal('每天跑步 20 分鐘')">每天跑步 20 分鐘</p>
+            <p onclick="fillGoal('每天拉筋 10 分鐘')">每天拉筋 10 分鐘</p>
+            <p onclick="fillGoal('每天練核心 10 分鐘')">每天練核心 10 分鐘</p>
+            <p onclick="fillGoal('每天做瑜珈 15 分鐘')">每天做瑜珈 15 分鐘	</p>
+        </div>
+        <div id="learning" class="goal-category" style="display: none;">
+            <p onclick="fillGoal('每天學日文 30 分鐘')">每天學日文 30 分鐘</p>
+            <p onclick="fillGoal('每天背 10 個英文單字')">每天背 10 個英文單字</p>
+            <p onclick="fillGoal('每天刷 1 題 LeetCode')">每天刷 1 題 LeetCode</p>
+            <p onclick="fillGoal('每天讀 10 頁書')">每天讀 10 頁書</p>
+            <p onclick="fillGoal('每天聽 1 集 podcast')">每天聽 1 集 podcast</p>
+            <p onclick="fillGoal('每天做 1 項新學習挑戰')">每天做 1 項新學習挑戰</p>
+            <p onclick="fillGoal('每天寫學習筆記')">每天寫學習筆記</p>
+        </div>
+        <div id="wellBeing" class="goal-category" style="display: none;">
+            <p onclick="fillGoal('每天冥想 5 分鐘')">每天冥想 5 分鐘</p>
+            <p onclick="fillGoal('每天寫 1 行日記')">每天寫 1 行日記</p>
+            <p onclick="fillGoal('每天整理房間 5 分鐘')">每天整理房間 5 分鐘</p>
+            <p onclick="fillGoal('每天做深呼吸練習')">每天做深呼吸練習</p>
+            <p onclick="fillGoal('每天曬太陽 10 分鐘')">每天曬太陽 10 分鐘</p>
+            <p onclick="fillGoal('每天寫下 3 件感恩的事')">每天寫下 3 件感恩的事</p>
+
+        </div>
+        <div id="diet" class="goal-category" style="display: none;">
+            <p onclick="fillGoal('每天喝 2000cc 水')">每天喝 2000cc 水</p>
+            <p onclick="fillGoal('每天吃 1 份青菜')">每天吃 1 份青菜</p>
+            <p onclick="fillGoal('每天不喝含糖飲料')">每天不喝含糖飲料</p>
+            <p onclick="fillGoal('每天記錄飲食內容')">每天記錄飲食內容</p>
+            <p onclick="fillGoal('每天攝取蛋白質來源')">每天攝取蛋白質來源</p>
+            <p onclick="fillGoal('每天不吃宵夜')">每天不吃宵夜</p>
+            <p onclick="fillGoal('每天吃 1 顆水果')">每天吃 1 顆水果</p>
+            <p onclick="fillGoal('每天自己煮 1 餐')">每天自己煮 1 餐</p>
+
+        </div>
+        <div id="productivity" class="goal-category" style="display: none;">
+            <p onclick="fillGoal('每天 8:00 前起床')">每天 8:00 前起床</p>
+            <p onclick="fillGoal('每天列出當天待辦清單')">每天列出當天待辦清單</p>
+            <p onclick="fillGoal('下班後不再看工作訊息')">下班後不再看工作訊息</p>
+            <p onclick="fillGoal('每天規劃隔天行程')">每天規劃隔天行程</p>
+            <p onclick="fillGoal('每天讀書或寫作業 1 小時')">每天讀書或寫作業 1 小時</p>
+            <p onclick="fillGoal('每天整理桌面 1 次')">每天整理桌面 1 次</p>
+            <p onclick="fillGoal('每天減少分心 30 分鐘')">每天減少分心 30 分鐘</p>
+        </div>
+        <div id="creativity" class="goal-category" style="display: none;">
+            <p onclick="fillGoal('每天畫畫 30 分鐘')">每天畫畫 30 分鐘</p>
+            <p onclick="fillGoal('每天彈樂器 15 分鐘')">每天彈樂器 15 分鐘</p>
+            <p onclick="fillGoal('每天拍攝一張特別的照片')">每天拍攝一張特別的照片</p>
+            <p onclick="fillGoal('每天進行創意寫作挑戰')">每天進行創意寫作挑戰</p>
+        </div>
 
     {% else %}
         <h2>Please set two habits you'd like to build</h2>
@@ -33,13 +99,107 @@
 
             <button type="submit">Save Goals</button>
         </form>
+        <h3>Or, you can choose from the recommended daily habits below:</h3>
+        <div>
+            <button onclick="showCategory('fitness')">Fitness Habits</button>
+            <button onclick="showCategory('learning')">Learning Habits</button>
+            <button onclick="showCategory('wellBeing')">Well-being Habits</button>
+            <button onclick="showCategory('diet')">Healthy Eating Habits</button>
+            <button onclick="showCategory('productivity')">Productivity Habits</button>
+            <button onclick="showCategory('creativity')">Creative Habits</button>
+        </div>
+
+        <div id="fitness" class="goal-category">
+            <p onclick="fillGoal('Walk 8,000 steps every day')">Walk 8,000 steps every day</p>
+            <p onclick="fillGoal('Do 30 minutes of exercise every day')">Do 30 minutes of exercise every day</p>
+            <p onclick="fillGoal('Run for 20 minutes every day')">Run for 20 minutes every day</p>
+            <p onclick="fillGoal('Stretch for 10 minutes every day')">Stretch for 10 minutes every day</p>
+            <p onclick="fillGoal('Do core training for 10 minutes every day')">Do core training for 10 minutes every day</p>
+            <p onclick="fillGoal('Practice yoga for 15 minutes every day')">Practice yoga for 15 minutes every day</p>
+        </div>
+
+        <div id="learning" class="goal-category" style="display: none;">
+            <p onclick="fillGoal('Study Japanese for 30 minutes every day')">Study Japanese for 30 minutes every day</p>
+            <p onclick="fillGoal('Memorize 10 English words every day')">Memorize 10 English words every day</p>
+            <p onclick="fillGoal('Solve 1 LeetCode problem every day')">Solve 1 LeetCode problem every day</p>
+            <p onclick="fillGoal('Read 10 pages of a book every day')">Read 10 pages of a book every day</p>
+            <p onclick="fillGoal('Listen to 1 podcast episode every day')">Listen to 1 podcast episode every day</p>
+            <p onclick="fillGoal('Do 1 new learning challenge every day')">Do 1 new learning challenge every day</p>
+            <p onclick="fillGoal('Write learning notes every day')">Write learning notes every day</p>
+        </div>
+
+        <div id="wellBeing" class="goal-category" style="display: none;">
+            <p onclick="fillGoal('Meditate for 5 minutes every day')">Meditate for 5 minutes every day</p>
+            <p onclick="fillGoal('Write 1 line of journal every day')">Write 1 line of journal every day</p>
+            <p onclick="fillGoal('Tidy your room for 5 minutes every day')">Tidy your room for 5 minutes every day</p>
+            <p onclick="fillGoal('Do breathing exercises every day')">Do breathing exercises every day</p>
+            <p onclick="fillGoal('Get 10 minutes of sunlight every day')">Get 10 minutes of sunlight every day</p>
+            <p onclick="fillGoal('Write down 3 things you’re grateful for every day')">Write down 3 things you’re grateful for every day</p>
+        </div>
+
+        <div id="diet" class="goal-category" style="display: none;">
+            <p onclick="fillGoal('Drink 2000cc of water every day')">Drink 2000cc of water every day</p>
+            <p onclick="fillGoal('Eat at least one portion of vegetables every day')">Eat at least one portion of vegetables every day</p>
+            <p onclick="fillGoal('Avoid sugary drinks every day')">Avoid sugary drinks every day</p>
+            <p onclick="fillGoal('Log your meals every day')">Log your meals every day</p>
+            <p onclick="fillGoal('Consume a source of protein every day')">Consume a source of protein every day</p>
+            <p onclick="fillGoal('Avoid late-night snacks every day')">Avoid late-night snacks every day</p>
+            <p onclick="fillGoal('Eat one piece of fruit every day')">Eat one piece of fruit every day</p>
+            <p onclick="fillGoal('Cook one meal yourself every day')">Cook one meal yourself every day</p>
+        </div>
+
+        <div id="productivity" class="goal-category" style="display: none;">
+            <p onclick="fillGoal('Wake up before 8:00 AM every day')">Wake up before 8:00 AM every day</p>
+            <p onclick="fillGoal('Write a to-do list every day')">Write a to-do list every day</p>
+            <p onclick="fillGoal('Do not check work messages after work')">Do not check work messages after work</p>
+            <p onclick="fillGoal('Plan your next day every night')">Plan your next day every night</p>
+            <p onclick="fillGoal('Study or do homework for 1 hour every day')">Study or do homework for 1 hour every day</p>
+            <p onclick="fillGoal('Clean up your desk once a day')">Clean up your desk once a day</p>
+            <p onclick="fillGoal('Reduce distractions for 30 minutes every day')">Reduce distractions for 30 minutes every day</p>
+        </div>
+
+        <div id="creativity" class="goal-category" style="display: none;">
+            <p onclick="fillGoal('Draw for 30 minutes every day')">Draw for 30 minutes every day</p>
+            <p onclick="fillGoal('Play a musical instrument for 15 minutes every day')">Play a musical instrument for 15 minutes every day</p>
+            <p onclick="fillGoal('Take one special photo every day')">Take one special photo every day</p>
+            <p onclick="fillGoal('Do a creative writing challenge every day')">Do a creative writing challenge every day</p>
+        </div>
+
 
         {% if error %}
             <p style="color: red;">{{ error }}</p>
+        {% else %}
+            <p id="goalError" style="color: red;"></p>
         {% endif %}
     {% endif %}
 
 
 
 </body>
+
+
+<script>
+    function showCategory(name) {
+        document.querySelectorAll('.goal-category').forEach(function(div) {
+            div.style.display = 'none';
+        });
+        document.getElementById(name).style.display = 'block';
+    }
+    
+    function fillGoal(text) {
+        const goal1 = document.getElementsByName('goal1')[0];
+        const goal2 = document.getElementsByName('goal2')[0];
+        if (!goal1.value) {
+            goal1.value = text;
+        } else if (!goal2.value) {
+            goal2.value = text;
+        } else {
+            if (userLang === "zh"){
+                alert("你已經設定了兩個習慣！");
+            } else {
+                alert("You have already selected two habits!");
+            }
+        }
+    }
+    </script>
 </html>
